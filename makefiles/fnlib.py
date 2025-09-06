@@ -10,8 +10,10 @@ FUJINET_REPO = "FujiNetWIFI/fujinet-lib/"
 GITHUB_API = "https://api.github.com/repos/"
 GITHUB_URL = "https://github.com/"
 CACHE_DIR = "_cache"
+FUJINET_CACHE_DIR = os.path.join(CACHE_DIR, "fujinet-lib")
 
-VERSION_PATTERN = r"v?([0-9]+[.][0-9]+[.][0-9]+)"
+VERSION_NUM = r"([0-9]+[.][0-9]+[.][0-9]+)"
+VERSION_NAME = fr"v?{VERSION_NUM}"
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -31,51 +33,79 @@ class MakeVariables:
     for key in attrs:
       print(f"{key}={shlex.quote(getattr(self, key))}")
     return
-  
-def main():
-  args = build_argparser().parse_args()
 
-  PLATFORM = os.getenv("PLATFORM")
-  if args.platform:
-    PLATFORM = args.platform
+class LibLocator:
+  def __init__(self, FUJINET_LIB, PLATFORM):
+    # FUJINET_LIB can be
+    # - a version number such as 4.7.4
+    # - a directory which contains the libs for each platform
+    # - a zip file with an archived fujinet-lib
+    # - empty
 
-  if not PLATFORM:
-    print("Please specify PLATFORM")
-    exit(1)
+    self.MV = MakeVariables([
+      "FUJINET_LIB_DIR",
+      "FUJINET_LIB_ARCHIVE",
+      "FUJINET_LIB_VERSION",
+      "FUJINET_LIB_INCLUDE",
+      "FUJINET_LIB_ZIP",
+    ])
+    
+    self.PLATFORM = PLATFORM
 
-  FUJINET_LIB = args.file
+    # Two possible library filename patterns:
+    #   - fujinet-coco-4.7.6.lib
+    #   - fujinet.apple2.lib
+    self.LIBRARY_REGEX = fr"fujinet[-.]{self.PLATFORM}(-{VERSION_NUM})?[.]lib$"
 
-  # FUJINET_LIB can be
-  # - a version number such as 4.7.4
-  # - a directory which contains the libs for each platform
-  # - a zip file with an archived fujinet-lib
+    if FUJINET_LIB:
+      m = re.match(VERSION_NAME, FUJINET_LIB)
+      if m:
+        self.MV.FUJINET_LIB_VERSION = m.group(1)
+      elif os.path.isfile(FUJINET_LIB):
+        _, ext = os.path.splitex(FUJINET_LIB)
+        if ext == ".zip":
+          self.MV.FUJINET_LIB_ZIP = FUJINET_LIB
+        else:
+          self.MV.FUJINET_LIB_DIR = os.path.dirname(FUJINET_LIB)
+          self.MV.FUJINET_LIB_ARCHIVE = os.path.basename(FUJINET_LIB)
+      elif os.path.isdir(FUJINET_LIB):
+        self.MV.FUJINET_LIB_DIR = FUJINET_LIB
 
-  MV = MakeVariables([
-    "FUJINET_LIB_DIR",
-    "FUJINET_LIB_ARCHIVE",
-    "FUJINET_LIB_VERSION",
-    "FUJINET_LIB_INCLUDE",
-    "FUJINET_LIB_ZIP",
-  ])
+    if not self.MV.FUJINET_LIB_VERSION:
+      self.getVersion()
 
-  FUJINET_CACHE_DIR = os.path.join(CACHE_DIR, "fujinet-lib")
-  
-  if FUJINET_LIB:
-    m = re.match(VERSION_PATTERN, FUJINET_LIB)
-    if m:
-      MV.FUJINET_LIB_VERSION = m.group(1)
-    elif os.path.isfile(FUJINET_LIB):
-      _, ext = os.path.splitex(FUJINET_LIB)
-      if ext == ".zip":
-        MV.FUJINET_LIB_ZIP = FUJINET_LIB
-      else:
-        MV.FUJINET_LIB_DIR = os.path.dirname(FUJINET_LIB)
-        MV.FUJINET_LIB_ARCHIVE = os.path.basename(FUJINET_LIB)
-    elif os.path.isdir(FUJINET_LIB):
-      MV.FUJINET_LIB_DIR = FUJINET_LIB
+    if not self.MV.FUJINET_LIB_DIR:
+      self.getDirectory()
+      
+    if not self.MV.FUJINET_LIB_ARCHIVE:
+      self.getArchive()
 
-  if not MV.FUJINET_LIB_VERSION:
-    if MV.FUJINET_LIB_DIR or MV.FUJINET_LIB_ZIP:
+    if not self.MV.FUJINET_LIB_INCLUDE:
+      self.getInclude()
+
+    return
+
+  def checkLibraryFilename(self, filename):
+    m = re.match(self.LIBRARY_REGEX, filename)
+    if not m:
+      if self.PLATFORM == "coco":
+        alt_pattern = fr"libfujinet.{self.PLATFORM}.a"
+        m = re.match(alt_pattern, filename)
+    return m
+
+  def getVersion(self):
+    if self.MV.FUJINET_LIB_DIR:
+      all_files = os.listdir(self.MV.FUJINET_LIB_DIR)
+      for filename in all_files:
+        m = self.checkLibraryFilename(filename)
+        if m:
+          if len(m.groups()) >= 2:
+            self.MV.FUJINET_LIB_VERSION = m.group(2)
+          self.MV.FUJINET_LIB_ARCHIVE = filename
+          return
+      raise NotImplementedError("No library found")
+
+    if self.MV.FUJINET_LIB_ZIP:
       raise ValueError("Which file is the newest?")
 
     latest_url = f"{GITHUB_API}{FUJINET_REPO}releases/latest"
@@ -91,28 +121,31 @@ def main():
     if not latest_version:
       raise ValueError("Can't find version")
 
-    m = re.match(VERSION_PATTERN, latest_version)
+    m = re.match(VERSION_NUM, latest_version)
     if not m:
       raise ValueError("Not a FujiNet-lib version")
 
-    MV.FUJINET_LIB_VERSION = m.group(1)
+    self.MV.FUJINET_LIB_VERSION = m.group(1)
+    return
 
-  if not MV.FUJINET_LIB_DIR:
-    MV.FUJINET_LIB_DIR = os.path.join(FUJINET_CACHE_DIR, f"{MV.FUJINET_LIB_VERSION}-{PLATFORM}")
+  def getDirectory(self):
+    self.MV.FUJINET_LIB_DIR = os.path.join(FUJINET_CACHE_DIR,
+                                           f"{self.MV.FUJINET_LIB_VERSION}-{self.PLATFORM}")
+    return
 
-  if not MV.FUJINET_LIB_ARCHIVE:
-    os.makedirs(MV.FUJINET_LIB_DIR, exist_ok=True)
+  def getArchive(self):
+    os.makedirs(self.MV.FUJINET_LIB_DIR, exist_ok=True)
 
-    MV.FUJINET_LIB_ARCHIVE = f"fujinet-{PLATFORM}-{MV.FUJINET_LIB_VERSION}.lib"
-    if not os.path.exists(os.path.join(MV.FUJINET_LIB_DIR, MV.FUJINET_LIB_ARCHIVE)):
-      zip_path = f"fujinet-lib-{PLATFORM}-{MV.FUJINET_LIB_VERSION}.zip"
+    self.MV.FUJINET_LIB_ARCHIVE = f"fujinet-{self.PLATFORM}-{self.MV.FUJINET_LIB_VERSION}.lib"
+    if not os.path.exists(os.path.join(self.MV.FUJINET_LIB_DIR, self.MV.FUJINET_LIB_ARCHIVE)):
+      zip_path = f"fujinet-lib-{self.PLATFORM}-{self.MV.FUJINET_LIB_VERSION}.zip"
 
-      if not MV.FUJINET_LIB_ZIP:
-        MV.FUJINET_LIB_ZIP = os.path.join(FUJINET_CACHE_DIR, zip_path)
+      if not self.MV.FUJINET_LIB_ZIP:
+        self.MV.FUJINET_LIB_ZIP = os.path.join(FUJINET_CACHE_DIR, zip_path)
 
-      if not os.path.exists(MV.FUJINET_LIB_ZIP):
+      if not os.path.exists(self.MV.FUJINET_LIB_ZIP):
         release_url = f"{GITHUB_URL}{FUJINET_REPO}releases/download" \
-          f"/v{MV.FUJINET_LIB_VERSION}/{zip_path}"
+          f"/v{self.MV.FUJINET_LIB_VERSION}/{zip_path}"
         try:
           response = requests.get(release_url, stream=True)
           response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
@@ -120,29 +153,44 @@ def main():
           print(f"Error downloading file: {e}")
           exit(1)
 
-        with open(MV.FUJINET_LIB_ZIP, 'wb') as f:
+        with open(self.MV.FUJINET_LIB_ZIP, 'wb') as f:
           for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
 
-      with zipfile.ZipFile(MV.FUJINET_LIB_ZIP, "r") as zf:
-        zf.extractall(MV.FUJINET_LIB_DIR)
+      with zipfile.ZipFile(self.MV.FUJINET_LIB_ZIP, "r") as zf:
+        zf.extractall(self.MV.FUJINET_LIB_DIR)
 
-  if not MV.FUJINET_LIB_INCLUDE:
-    if os.path.exists(os.path.join(MV.FUJINET_LIB_DIR, "fujinet-fuji.h")):
-      MV.FUJINET_LIB_INCLUDE = MV.FUJINET_LIB_DIR
-    else:
-      raise ValueError("Must set the include directory!")
+    return
 
-  MV.printValues()
+  def getInclude(self):
+    parent = os.path.dirname(self.MV.FUJINET_LIB_DIR.rstrip("/"))
+    check_dirs = [self.MV.FUJINET_LIB_DIR, parent, os.path.join(parent, "include")]
+    for idir in check_dirs:
+      print("Checking", idir)
+      if os.path.exists(os.path.join(idir, "fujinet-fuji.h")):
+        self.MV.FUJINET_LIB_INCLUDE = idir
+        return
+    raise ValueError("Unable to find include directory")
 
-  # FIXME - set FUJINET_LIB_DIR
-  # FIXME - is FUJINET_LIB a directory? Then use that
-  # FIXME - not a dir, need to create a cache dir
-  # FIXME - does cache dir match requested version?
-  # FIXME - does zip file contain version number?
-  # FIXME - unzip if zip file
-  # FIXME - else, download
-  # FIXME - if no version specified, get latest
+    return
+
+  def printMakeVariables(self):
+    self.MV.printValues()
+    return
+    
+def main():
+  args = build_argparser().parse_args()
+
+  PLATFORM = os.getenv("PLATFORM")
+  if args.platform:
+    PLATFORM = args.platform
+
+  if not PLATFORM:
+    print("Please specify PLATFORM")
+    exit(1)
+
+  fujinetLib = LibLocator(args.file, PLATFORM)
+  fujinetLib.printMakeVariables()
 
   return
 
