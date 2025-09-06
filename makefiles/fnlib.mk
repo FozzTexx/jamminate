@@ -1,3 +1,5 @@
+$(error DO NOT USE)
+
 # Design goals:
 #
 # 1. Easily override with local/alternative fujinet-lib

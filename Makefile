@@ -1,12 +1,12 @@
 APP = jammin8
-PLATFORMS = coco
-CFILES_COMMON = main.c
+PLATFORMS = coco apple2
 
 # FUJINET_LIB can be
 # - a version number such as 4.7.4
 # - a directory which contains the libs for each platform
 # - a zip file with an archived fujinet-lib
-FUJINET_LIB=4.7.4
+# - empty which will use whatever is the latest
+FUJINET_LIB = 4.7.4
 
 # FIXME - Hack to build inside of defoogi. Maybe only fallback on
 #         defoogi if build tools are missing?
@@ -38,13 +38,19 @@ R2R_DIR = r2r
 # Make a list of the things we want to build which combine R2R dir, app name, and platform
 APP_TARGETS := $(foreach p, $(PLATFORMS), $(R2R_DIR)/$(p)/$(APP))
 
+$(info APP_TARGETS=$(APP_TARGETS))
 all:: $(APP_TARGETS)
 
 export FUJINET_LIB
 
 # Use % wildcard match to platform specific app so we don't have to
 # spell out every single platform variation
-$(R2R_DIR)/%/$(APP): $(MAGIC_PLATFORM_DEPS)
-	$(MAKE) -f $(MAKEFILE_DIR)/$*.mk
+$(R2R_DIR)/%/$(APP): FORCE
+	$(MAKE) -f $(MAKEFILE_DIR)/platforms/$*.mk r2r
+
+.PHONY: all FORCE
+
+# Convenience: allow `make coco` (or apple2) as a shortcut
+$(PLATFORMS): %: $(R2R_DIR)/%/$(APP)
 
 MAKEFILE_DIR = makefiles

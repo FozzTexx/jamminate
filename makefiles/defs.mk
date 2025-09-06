@@ -1,3 +1,5 @@
+$(error DO NOT USE)
+
 include $(MWD)/../Makefile
 R2R_PD = $(R2R_DIR)/$(PLATFORM)
 TARGET := $(R2R_PD)/$(APP)

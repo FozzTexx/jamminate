@@ -200,7 +200,11 @@ def main():
     print("Please specify PLATFORM")
     exit(1)
 
-  fujinetLib = LibLocator(args.file, PLATFORM)
+  FUJINET_LIB = args.file
+  if not FUJINET_LIB:
+    FUJINET_LIB = os.getenv("FUJINET_LIB")
+
+  fujinetLib = LibLocator(FUJINET_LIB, PLATFORM)
   fujinetLib.printMakeVariables()
 
   return

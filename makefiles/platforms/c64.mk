@@ -1,5 +1,5 @@
 PLATFORM=c64
--include defs.mk
+include defs.mk
 
 all: $(TARGET).$(PLATFORM)
 
@@ -8,5 +8,5 @@ $(TARGET).$(PLATFORM): $(OBJS)
 
 $(OBJDIR)/main.o: $(FNLIB_LIBS)/fujinet.$(PLATFORM).lib
 
--include cc65.common.mk
--include post.mk
+include cc65.common.mk
+include post.mk

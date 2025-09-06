@@ -1,14 +1,16 @@
-$(OBJDIR) $(R2R_PD)::
+$(error DO NOT USE)
+
+$(OBJ_DIR) $(R2R_PD)::
 	$(MKDIR_P) $@
 
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
+$(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
 	$(compile)
-$(OBJDIR)/%.o: common/%.c | $(OBJDIR)
+$(OBJ_DIR)/%.o: common/%.c | $(OBJ_DIR)
 	$(compile)
-$(OBJDIR)/%.o: bus/$(PLATFORM)/%.c | $(OBJDIR)
+$(OBJ_DIR)/%.o: bus/$(PLATFORM)/%.c | $(OBJ_DIR)
 	$(compile)
 
-$(OBJDIR)/%.o: common/%.s | $(OBJDIR)
+$(OBJ_DIR)/%.o: common/%.s | $(OBJ_DIR)
 	$(assemble)
-$(OBJDIR)/%.o: bus/$(PLATFORM)/%.s | $(OBJDIR)
+$(OBJ_DIR)/%.o: bus/$(PLATFORM)/%.s | $(OBJ_DIR)
 	$(assemble)
