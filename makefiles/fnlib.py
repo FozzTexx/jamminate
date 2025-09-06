@@ -6,9 +6,9 @@ import requests
 import zipfile
 import shlex
 
-FUJINET_REPO = "FujiNetWIFI/fujinet-lib/"
-GITHUB_API = "https://api.github.com/repos/"
-GITHUB_URL = "https://github.com/"
+FUJINET_REPO = "FujiNetWIFI/fujinet-lib"
+GITHUB_API = "https://api.github.com/repos"
+GITHUB_URL = "https://github.com"
 CACHE_DIR = "_cache"
 FUJINET_CACHE_DIR = os.path.join(CACHE_DIR, "fujinet-lib")
 
@@ -49,7 +49,7 @@ class LibLocator:
       "FUJINET_LIB_INCLUDE",
       "FUJINET_LIB_ZIP",
     ])
-    
+
     self.PLATFORM = PLATFORM
 
     # Two possible library filename patterns:
@@ -62,7 +62,7 @@ class LibLocator:
       if m:
         self.MV.FUJINET_LIB_VERSION = m.group(1)
       elif os.path.isfile(FUJINET_LIB):
-        _, ext = os.path.splitex(FUJINET_LIB)
+        _, ext = os.path.splitext(FUJINET_LIB)
         if ext == ".zip":
           self.MV.FUJINET_LIB_ZIP = FUJINET_LIB
         else:
@@ -76,7 +76,7 @@ class LibLocator:
 
     if not self.MV.FUJINET_LIB_DIR:
       self.getDirectory()
-      
+
     if not self.MV.FUJINET_LIB_ARCHIVE:
       self.getArchive()
 
@@ -93,22 +93,34 @@ class LibLocator:
         m = re.match(alt_pattern, filename)
     return m
 
+  def findLibrary(self, filelist):
+    for filename in filelist:
+      m = self.checkLibraryFilename(filename)
+      if m:
+        return m
+    return None
+
   def getVersion(self):
     if self.MV.FUJINET_LIB_DIR:
-      all_files = os.listdir(self.MV.FUJINET_LIB_DIR)
-      for filename in all_files:
-        m = self.checkLibraryFilename(filename)
+      m = self.findLibrary(os.listdir(self.MV.FUJINET_LIB_DIR))
+      if m:
+        if len(m.groups()) >= 2:
+          self.MV.FUJINET_LIB_VERSION = m.group(2)
+        self.MV.FUJINET_LIB_ARCHIVE = filename
+        return
+      raise ValueError("No library found")
+
+    if self.MV.FUJINET_LIB_ZIP:
+      with zipfile.ZipFile(self.MV.FUJINET_LIB_ZIP, "r") as zf:
+        m = self.findLibrary(zf.namelist())
         if m:
           if len(m.groups()) >= 2:
             self.MV.FUJINET_LIB_VERSION = m.group(2)
-          self.MV.FUJINET_LIB_ARCHIVE = filename
           return
-      raise NotImplementedError("No library found")
 
-    if self.MV.FUJINET_LIB_ZIP:
       raise ValueError("Which file is the newest?")
 
-    latest_url = f"{GITHUB_API}{FUJINET_REPO}releases/latest"
+    latest_url = f"{GITHUB_API}/{FUJINET_REPO}/releases/latest"
     try:
       response = requests.get(latest_url)
       response.raise_for_status()  # Raise an exception for bad status codes
@@ -121,9 +133,9 @@ class LibLocator:
     if not latest_version:
       raise ValueError("Can't find version")
 
-    m = re.match(VERSION_NUM, latest_version)
+    m = re.match(VERSION_NAME, latest_version)
     if not m:
-      raise ValueError("Not a FujiNet-lib version")
+      raise ValueError("Not a FujiNet-lib version", latest_version)
 
     self.MV.FUJINET_LIB_VERSION = m.group(1)
     return
@@ -144,7 +156,7 @@ class LibLocator:
         self.MV.FUJINET_LIB_ZIP = os.path.join(FUJINET_CACHE_DIR, zip_path)
 
       if not os.path.exists(self.MV.FUJINET_LIB_ZIP):
-        release_url = f"{GITHUB_URL}{FUJINET_REPO}releases/download" \
+        release_url = f"{GITHUB_URL}/{FUJINET_REPO}/releases/download" \
           f"/v{self.MV.FUJINET_LIB_VERSION}/{zip_path}"
         try:
           response = requests.get(release_url, stream=True)
@@ -166,7 +178,6 @@ class LibLocator:
     parent = os.path.dirname(self.MV.FUJINET_LIB_DIR.rstrip("/"))
     check_dirs = [self.MV.FUJINET_LIB_DIR, parent, os.path.join(parent, "include")]
     for idir in check_dirs:
-      print("Checking", idir)
       if os.path.exists(os.path.join(idir, "fujinet-fuji.h")):
         self.MV.FUJINET_LIB_INCLUDE = idir
         return
@@ -177,7 +188,7 @@ class LibLocator:
   def printMakeVariables(self):
     self.MV.printValues()
     return
-    
+
 def main():
   args = build_argparser().parse_args()
 
