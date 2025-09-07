@@ -43,26 +43,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Download artifacts from build matrix
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: r2r
+          path: r2r-all
 
-      # Upload to GitHub Release
-      - name: Create or update release
+      - name: Create or update "latest" release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: latest
-          name: "Latest Build"
-          body: "Automated build artifacts"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Upload each platform folder
-      - name: Upload platform artifacts
+      - name: Upload all platform artifacts
         run: |
-          for d in r2r/*; do
-            [ -d "$d" ] || continue
-            gh release upload latest "$d/*" --clobber
+          for dir in r2r-all/*; do
+            echo "Uploading $dir..."
+            gh release upload latest "$dir"/*
           done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
