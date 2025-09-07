@@ -55,11 +55,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload all platform artifacts
+      - name: Upload all platform artifacts as zips
         run: |
           for dir in r2r-all/*; do
-            echo "Uploading $dir..."
-            gh release upload latest "$dir"/* --clobber
+            platform=$(basename "$dir")
+            echo "Zipping $platform..."
+            zip -r "r2r-all/${platform}.zip" "$dir"
+            echo "Uploading ${platform}.zip..."
+            gh release upload latest "r2r-all/${platform}.zip" --clobber
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
