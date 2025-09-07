@@ -55,6 +55,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Clear old release assets
+        run: |
+          echo "Fetching existing assets for release 'latest'..."
+          assets=$(gh release view latest --json assets -q '.assets[].name')
+          for asset in $assets; do
+            echo "Deleting $asset..."
+            gh release delete-asset "$asset" --release latest --yes
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload all platform artifacts as zips
         run: |
           for dir in r2r-all/*; do
