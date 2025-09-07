@@ -1,12 +1,12 @@
 APP = jammin8
-PLATFORMS = coco apple2
+PLATFORMS = coco apple2 atari c64 adam
 
 # FUJINET_LIB can be
-# - a version number such as 4.7.4
+# - a version number such as 4.7.6
 # - a directory which contains the libs for each platform
 # - a zip file with an archived fujinet-lib
 # - empty which will use whatever is the latest
-FUJINET_LIB = 4.7.4
+FUJINET_LIB = ../fujinet-lib/build
 
 # FIXME - Hack to build inside of defoogi. Maybe only fallback on
 #         defoogi if build tools are missing?
@@ -38,7 +38,6 @@ R2R_DIR = r2r
 # Make a list of the things we want to build which combine R2R dir, app name, and platform
 APP_TARGETS := $(foreach p, $(PLATFORMS), $(R2R_DIR)/$(p)/$(APP))
 
-$(info APP_TARGETS=$(APP_TARGETS))
 all:: $(APP_TARGETS)
 
 export FUJINET_LIB
@@ -52,5 +51,26 @@ $(R2R_DIR)/%/$(APP): FORCE
 
 # Convenience: allow `make coco` (or apple2) as a shortcut
 $(PLATFORMS): %: $(R2R_DIR)/%/$(APP)
+
+# ------------------------------------------------------------------------
+# Pattern rule to support "make <platform>/<target>" syntax.
+#
+# Example: "make apple2/r2r"
+#   $@   = "apple2/r2r"         (the full target name)
+#   $(@D) = "apple2"             (the directory part before the slash)
+#   $(@F) = "r2r"                (the filename part after the slash)
+#
+# This runs the corresponding platform makefile:
+#   make -f makefiles/platforms/apple2.mk r2r
+#
+# Works for ANY target name, so:
+#   make coco/clean   -> runs clean in makefiles/platforms/coco.mk
+#   make atari/debug  -> runs debug in makefiles/platforms/atari.mk
+# ------------------------------------------------------------------------
+%/%:
+	@platform=$(@D); \
+	target=$(@F); \
+	echo ">>> Building $$platform $$target"; \
+	$(MAKE) -f makefiles/platforms/$$platform.mk $$target
 
 MAKEFILE_DIR = makefiles
