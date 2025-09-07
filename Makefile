@@ -1,12 +1,12 @@
 APP = jammin8
-PLATFORMS = coco apple2 atari c64 adam
+PLATFORMS = coco apple2 atari c64 adam msdos
 
 # FUJINET_LIB can be
 # - a version number such as 4.7.6
 # - a directory which contains the libs for each platform
 # - a zip file with an archived fujinet-lib
 # - empty which will use whatever is the latest
-FUJINET_LIB = ../fujinet-lib/build
+FUJINET_LIB = 4.7.6
 
 # FIXME - Hack to build inside of defoogi. Maybe only fallback on
 #         defoogi if build tools are missing?
