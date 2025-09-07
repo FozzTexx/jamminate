@@ -77,7 +77,7 @@ jobs:
             echo "Zipping ${PLATFORM}..."
             cp -r "${dir}" "${TMP_DIR}/${PLATFORM_ID}"
             ZIP_FILE="${PLATFORM_ID}.zip"
-            (cd "${TMP_DIR} && zip -r "${TMP_DIR}/${ZIP_FILE}" "${PLATFORM_ID}"
+            (cd "${TMP_DIR}" && zip -r "${TMP_DIR}/${ZIP_FILE}" "${PLATFORM_ID}"
             echo "Uploading ${ZIP_FILE}..."
             gh release upload latest "${TMP_DIR}/${ZIP_FILE}" --clobber
           done
