@@ -204,6 +204,10 @@ def main():
   if not FUJINET_LIB:
     FUJINET_LIB = os.getenv("FUJINET_LIB")
 
+  env_cache_dir = os.getenv("CACHE_DIR")
+  if env_cache_dir:
+    CACHE_DIR = env_cache_dir
+
   fujinetLib = LibLocator(FUJINET_LIB, PLATFORM)
   fujinetLib.printMakeVariables()
 

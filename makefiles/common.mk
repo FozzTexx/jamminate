@@ -3,15 +3,19 @@ define pop
 endef
 
 $(info MAKEFILE_LIST=$(MAKEFILE_LIST))
+
+# Automatically figure out PLATFORM from the .mk file that included us
 MKLIST_PREV = $(call pop,$(MAKEFILE_LIST))
 PLATFORM := $(basename $(notdir $(lastword $(MKLIST_PREV))))
 $(info Building for PLATFORM=$(PLATFORM))
 
 include $(MWD)/../Makefile
 
-R2R_PD = $(R2R_DIR)/$(PLATFORM)
+R2R_PD := $(R2R_DIR)/$(PLATFORM)
 
 BUILD_DIR = build
+CACHE_DIR = _cache
+CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)
 
 # Find all the CFILES
 CFILES := $(wildcard src/*.c) $(wildcard src/$(PLATFORM)/*.c)
@@ -27,7 +31,7 @@ $(info TARGET=$(TARGET))
 $(TARGET): $(OBJS) | $(R2R_PD)
 	$(link-bin)
 
-$(OBJ_DIR) $(R2R_PD)::
+$(OBJ_DIR) $(R2R_PD) $(CACHE_PLATFORM)::
 	$(MKDIR_P) $@
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
