@@ -12,9 +12,14 @@ FUJINET_LIB = 4.7.6
 #         defoogi if build tools are missing?
 #MAKE := defoogi -e FUJINET_LIB $(MAKE)
 
+########################################
+# The things below shouldn't normally need customization
+
 # Executables and disk images will be placed into a platform specific
 # subdirectory in a "Ready 2 Run" directory (r2r)
 R2R_DIR = r2r
+
+MAKEFILE_DIR = makefiles
 
 # This Makefile is done in a way to be able to build an application
 # which can run on multiple platforms.
@@ -67,10 +72,9 @@ $(PLATFORMS): %: $(R2R_DIR)/%/$(APP)
 #   make coco/clean   -> runs clean in makefiles/platforms/coco.mk
 #   make atari/debug  -> runs debug in makefiles/platforms/atari.mk
 # ------------------------------------------------------------------------
-%/%:
-	@platform=$(@D); \
-	target=$(@F); \
-	echo ">>> Building $$platform $$target"; \
-	$(MAKE) -f makefiles/platforms/$$platform.mk $$target
-
-MAKEFILE_DIR = makefiles
+.DEFAULT:
+	@target="$@" ; case "$@" in \
+	  */*) platform=$${target%/*}; target=$${target##*/}; \
+	       $(MAKE) -f makefiles/platforms/$${platform}.mk $${target} ;; \
+	  *)   echo "No rule to make target '$@'"; exit 1;; \
+	esac
