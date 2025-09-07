@@ -42,11 +42,37 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Create or update release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: Latest Build
-          allow_updates: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install GitHub CLI if not already available
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+
+      # Log in with the token
+      - name: Authenticate GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      # List all artifacts from this workflow run
+      - name: Get artifacts
+        id: artifacts
+        run: |
+          echo "ARTIFACTS=$(gh run list --workflow CI.yml --branch main --limit 1 --json artifacts --jq '.[0].artifacts[].name')" >> $GITHUB_ENV
+
+      # Download and upload each artifact to release
+      - name: Upload artifacts to release
+        run: |
+          # Create or update the release
+          gh release create latest --title "Latest Build" --notes "Automated build artifacts" --draft --prerelease || \
+          gh release upload latest --clobber r2r/*/*
+
+          # Make sure we have r2r dir
+          mkdir -p r2r
+
+          for artifact in $ARTIFACTS; do
+            echo "Downloading $artifact..."
+            gh run download --name "$artifact" --dir "r2r/$artifact"
+
+            echo "Uploading $artifact to release..."
+            gh release upload latest "r2r/$artifact/*" --clobber
+          done
