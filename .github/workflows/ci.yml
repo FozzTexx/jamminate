@@ -59,7 +59,7 @@ jobs:
         run: |
           for dir in r2r-all/*; do
             echo "Uploading $dir..."
-            gh release upload latest "$dir"/*
+            gh release upload latest "$dir"/* --clobber
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
