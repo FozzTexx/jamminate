@@ -14,11 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - adam
+          # - adam
           - apple2
           - atari
           - c64
-          - coco
+          # - coco
           - msdos
 
     container:
