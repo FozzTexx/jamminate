@@ -61,7 +61,7 @@ jobs:
           assets=$(gh release view latest --json assets -q '.assets[].name')
           for asset in $assets; do
             echo "Deleting $asset..."
-            gh release delete-asset "$asset" --release latest --yes
+            gh release delete-asset latest "$asset" -y
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
