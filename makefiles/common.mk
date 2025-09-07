@@ -11,8 +11,6 @@ include $(MWD)/../Makefile
 
 R2R_PD := $(R2R_DIR)/$(PLATFORM)
 
-BUILD_DIR = build
-CACHE_DIR = _cache
 CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)
 
 # Find all the CFILES
@@ -55,6 +53,9 @@ clean::
 debug::
 	echo 'What should debug target do?'
 	exit 1
+
+# include autodeps
+-include $(wildcard $(OBJ_DIR)/*.d)
 
 # Fill in the FUINET_LIB_* variables by calling fnlib.py. It's a bit
 # messy because of workarounds needed for dealing with newlines and

@@ -18,6 +18,8 @@ FUJINET_LIB = 4.7.6
 # Executables and disk images will be placed into a platform specific
 # subdirectory in a "Ready 2 Run" directory (r2r)
 R2R_DIR = r2r
+BUILD_DIR = build
+CACHE_DIR = _cache
 
 MAKEFILE_DIR = makefiles
 
@@ -43,16 +45,17 @@ MAKEFILE_DIR = makefiles
 # Make a list of the things we want to build which combine R2R dir, app name, and platform
 APP_TARGETS := $(foreach p, $(PLATFORMS), $(R2R_DIR)/$(p)/$(APP))
 
+.PHONY: all clean FORCE
+
 all:: $(APP_TARGETS)
 
-export FUJINET_LIB
+clean::
+	rm -rf $(R2R_DIR) $(BUILD_DIR) $(CACHE_DIR)
 
 # Use % wildcard match to platform specific app so we don't have to
 # spell out every single platform variation
 $(R2R_DIR)/%/$(APP): FORCE
 	$(MAKE) -f $(MAKEFILE_DIR)/platforms/$*.mk r2r
-
-.PHONY: all FORCE
 
 # Convenience: allow `make coco` (or apple2) as a shortcut
 $(PLATFORMS): %: $(R2R_DIR)/%/$(APP)
