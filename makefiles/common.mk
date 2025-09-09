@@ -14,7 +14,7 @@ R2R_PD := $(R2R_DIR)/$(PLATFORM)
 CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)
 
 # Find all the CFILES
-CFILES := $(wildcard src/*.c) $(wildcard src/$(PLATFORM)/*.c)
+CFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 $(info CFILES=$(CFILES))
 
 OBJ_DIR := $(BUILD_DIR)/$(PLATFORM)
@@ -23,8 +23,8 @@ $(info OBJS=$(OBJS))
 
 MKDIR_P ?= mkdir -p
 
-$(info TARGET=$(TARGET))
-$(TARGET): $(OBJS) | $(R2R_PD)
+$(info EXECUTABLE=$(EXECUTABLE))
+$(EXECUTABLE): $(OBJS) | $(R2R_PD)
 	$(link-bin)
 
 $(OBJ_DIR) $(R2R_PD) $(CACHE_PLATFORM):

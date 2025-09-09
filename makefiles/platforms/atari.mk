@@ -1,5 +1,5 @@
-TARGET = $(R2R_PD)/$(APP).com
-DISK = $(R2R_PD)/$(APP).atr
+EXECUTABLE = $(R2R_PD)/$(PRODUCT).com
+DISK = $(R2R_PD)/$(PRODUCT).atr
 
 MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk
@@ -10,7 +10,7 @@ r2r:: $(DISK)
 PICOBOOT_BIN = picoboot.bin
 ATRBOOT := $(CACHE_PLATFORM)/$(PICOBOOT_BIN)
 
-$(DISK): $(TARGET) $(ATRBOOT) | $(R2R_PD)
+$(DISK): $(EXECUTABLE) $(ATRBOOT) | $(R2R_PD)
 	$(RM) $@
 	$(MKDIR_P) $(CACHE_PLATFORM)/disk
 	cp $< $(CACHE_PLATFORM)/disk

@@ -4,6 +4,8 @@ CFLAGS = -O --cpu 6502 -I $(FUJINET_LIB_INCLUDE)
 AFLAGS = --cpu 6502
 LIBS = -L $(FUJINET_LIB_DIR) $(FUJINET_LIB_LDLIB)
 
+CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I $(incdir))
+
 define link-bin
   $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $^ $(LIBS) -o $@
 endef

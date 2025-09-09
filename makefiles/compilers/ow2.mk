@@ -6,6 +6,8 @@ LIBS = $(FUJINET_LIB_LDLIB)
 LD = wlink OPTION quiet
 LDFLAGS = SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
 
+CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
+
 define link-bin
   $(LD) $(LDFLAGS) \
     disable 1014 \

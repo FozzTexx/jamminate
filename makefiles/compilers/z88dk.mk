@@ -5,6 +5,8 @@ AFLAGS =
 LDFLAGS = +coleco -subtype=adam
 LIBS = -L$(FUJINET_LIB_DIR) -l$(FUJINET_LIB_LDLIB)
 
+CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
+
 define link-bin
   $(CC) $(LDFLAGS) $^ $(LIBS) -o $@
 endef
