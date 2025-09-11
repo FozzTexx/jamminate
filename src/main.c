@@ -4,6 +4,7 @@
 
 #define PORT "6573"
 #define SOCKET "N:TCP://:" PORT
+#define FRAMING 0xC0
 
 extern void play_string(const char *notes);
 
@@ -68,8 +69,8 @@ uint8_t network_accept(const char* devicespec)
   return network_get_error(ioctl.unit);
 }
 
-void parse_osc_message(uint8_t *msg, uint16_t msglen,
-                       char **osc_addr, char **osc_types, char **osc_values)
+uint16_t parse_osc_message(uint8_t *msg, uint16_t msglen,
+                           char **osc_addr, char **osc_types, char **osc_values)
 {
   uint8_t *addr, *types, *values;
   uint16_t pos, offset;
@@ -78,16 +79,16 @@ void parse_osc_message(uint8_t *msg, uint16_t msglen,
   *osc_addr = *osc_types = *osc_values = NULL;
 
   // Find first 0xC0
-  for (offset = 0; offset < msglen && msg[offset] != 0xC0; offset++)
+  for (offset = 0; offset < msglen && msg[offset] != FRAMING; offset++)
     ;
-  if (offset >= msglen || msg[offset] != 0xC0) {
+  if (offset >= msglen || msg[offset] != FRAMING) {
     printf("SLIP FRAMING NOT FOUND %u %u 0x%02x\n", offset, msglen, msg[offset]);
-    return;
+    return msglen;
   }
   offset++;
   if (msg[offset] != '/') {
     printf("ADDR NOT FOUND\n");
-    return;
+    return msglen;
   }
 
   addr = &msg[offset];
@@ -97,14 +98,14 @@ void parse_osc_message(uint8_t *msg, uint16_t msglen,
     ;
   if (offset + pos >= msglen || msg[offset + pos]) {
     printf("END OF ADDR NOT FOUND\n");
-    return;
+    return msglen;
   }
 
   // Skip over padding at end of string, always a multiple of 4 bytes
   pos = ((pos + 3) / 4) * 4;
   if (offset + pos >= msglen || msg[offset + pos] != ',') {
     printf("TYPES NOT FOUND\n");
-    return;
+    return msglen;
   }
 
   types = &msg[offset + pos];
@@ -114,28 +115,34 @@ void parse_osc_message(uint8_t *msg, uint16_t msglen,
     ;
   if (offset + pos >= msglen || msg[offset + pos]) {
     printf("END OF TYPES NOT FOUND\n");
-    return;
+    return msglen;
   }
 
   // Skip over padding at end of string, always a multiple of 4 bytes
   pos = ((pos + 3) / 4) * 4;
   if (offset + pos >= msglen) {
     printf("VALUES NOT FOUND\n");
-    return;
+    return msglen;
   }
 
   values = &msg[offset + pos];
+
+  // Move past 0xC0 at end of packet
+  for (; offset + pos < msglen && msg[offset + pos] != FRAMING; pos++)
+    ;
+  if (msg[offset + pos] == FRAMING)
+    pos++;
 
   *osc_addr = (char *) addr;
   *osc_types = (char *) types;
   *osc_values = (char *) values;
 
-  return;
+  return offset + pos;
 }
 
 int main()
 {
-  int16_t rlen;
+  int16_t rlen, pos;
   uint8_t err, status;
   uint16_t avail;
   char *ptr;
@@ -200,29 +207,39 @@ int main()
       break;
     }
 
-    osc_addr = NULL;
-    parse_osc_message(buffer, rlen, &osc_addr, &osc_types, &osc_values);
-    if (osc_addr) {
-      uint32_t *velocity = (uint32_t *) osc_values;
+    for (pos = 0; rlen;) {
+      uint16_t end_of_packet;;
 
 
-      printf("Addr: %s  Types: %s  Value: %ld\n", osc_addr, osc_types, *velocity);
+      end_of_packet = parse_osc_message(&buffer[pos], rlen,
+                                        &osc_addr, &osc_types, &osc_values);
+      if (!osc_addr)
+        break;
 
-      if (*velocity) {
+      {
         uint16_t octave, note;
+        uint32_t *velocity = (uint32_t *) osc_values;
 
 
-        note = atoi(osc_addr + 1);
-        octave = note / 12;
-        note %= 12;
-        sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
-        printf("PLAYING %s\n", buffer);
-        play_string((char *) buffer);
+        printf("Addr: %s  Types: %s  Value: %ld\n", osc_addr, osc_types, *velocity);
+
+        if (*velocity) {
+          note = atoi(osc_addr + 1);
+          octave = note / 12;
+          note %= 12;
+          sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
+          printf("PLAYING %s\n", buffer);
+          play_string((char *) buffer);
+        }
       }
+
+      rlen -= end_of_packet;
+      pos += end_of_packet;
     }
-    else {
+
+    if (rlen) {
       printf("Received: %d\n", rlen);
-      hexdump(buffer, rlen);
+      hexdump(&buffer[pos], rlen);
     }
   }
 
