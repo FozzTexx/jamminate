@@ -110,7 +110,7 @@ void parse_osc_message(uint8_t *msg, uint16_t msglen,
   types = &msg[offset + pos];
 
   // Find null terminator at end of OSC types
-  for (pos = 0; offset + pos < msglen && msg[offset + pos]; pos++)
+  for (; offset + pos < msglen && msg[offset + pos]; pos++)
     ;
   if (offset + pos >= msglen || msg[offset + pos]) {
     printf("END OF TYPES NOT FOUND\n");
@@ -203,18 +203,19 @@ int main()
     osc_addr = NULL;
     parse_osc_message(buffer, rlen, &osc_addr, &osc_types, &osc_values);
     if (osc_addr) {
-      printf("Addr: %s  Types: %s\n", osc_addr, osc_types);
+      uint32_t *velocity = (uint32_t *) osc_values;
 
-      // FIXME - decode values
 
-      {
+      printf("Addr: %s  Types: %s  Value: %ld\n", osc_addr, osc_types, *velocity);
+
+      if (*velocity) {
         uint16_t octave, note;
 
 
         note = atoi(osc_addr + 1);
         octave = note / 12;
         note %= 12;
-        sprintf((char *) buffer, "O%u;%u;", octave, note + 1);
+        sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
         printf("PLAYING %s\n", buffer);
         play_string((char *) buffer);
       }
