@@ -13,8 +13,9 @@ R2R_PD := $(R2R_DIR)/$(PLATFORM)
 
 CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)
 
-# Find all the CFILES
+# Find all the CFILES and AFILES
 CFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
+AFILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.s))
 $(info CFILES=$(CFILES))
 
 OBJ_DIR := $(BUILD_DIR)/$(PLATFORM)
@@ -32,20 +33,11 @@ $(OBJ_DIR) $(R2R_PD) $(CACHE_PLATFORM):
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
 	$(compile)
-$(OBJ_DIR)/%.o: common/%.c | $(OBJ_DIR)
-	$(compile)
-$(OBJ_DIR)/%.o: bus/$(PLATFORM)/%.c | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.s | $(OBJ_DIR)
 	$(compile)
 
-$(OBJ_DIR)/%.o: common/%.s | $(OBJ_DIR)
-	$(assemble)
-$(OBJ_DIR)/%.o: bus/$(PLATFORM)/%.s | $(OBJ_DIR)
-	$(assemble)
-
-vpath %.c src src/$(PLATFORM)
-
-# Assembly files are never directly in src/ because there's no common assembly syntax
-vpath %.s src/$(PLATFORM)
+vpath %.c $(SRC_DIRS)
+vpath %.s $(SRC_DIRS)
 
 clean::
 	rm -rf $(OBJ_DIR) $(CACHE_PLATFORM) $(R2R_PD)

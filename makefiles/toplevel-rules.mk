@@ -60,7 +60,8 @@ $(PLATFORMS): %: $(R2R_DIR)/%/$(PRODUCT)
 # ------------------------------------------------------------------------
 .DEFAULT:
 	@target="$@" ; case "$@" in \
-	  */*) platform=$${target%/*}; target=$${target##*/}; \
-	       $(MAKE) -f makefiles/platforms/$${platform}.mk $${target} ;; \
-	  *)   echo "No rule to make target '$@'"; exit 1;; \
+	  */*/*)   echo "No rule to make target '$@'"; exit 1;; \
+	  */*)     platform=$${target%/*}; target=$${target##*/}; \
+	           $(MAKE) -f makefiles/platforms/$${platform}.mk $${target} ;; \
+	  *)       echo "No rule to make target '$@'"; exit 1;; \
 	esac
