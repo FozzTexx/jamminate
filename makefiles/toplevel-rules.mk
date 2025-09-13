@@ -6,25 +6,6 @@ CACHE_DIR = _cache
 
 MAKEFILE_DIR = makefiles
 
-# This Makefile is done in a way to be able to build an application
-# which can run on multiple platforms.
-#
-# My main design goals:
-#
-# 1. Allow make to handle dependencies directly and execute only
-#    necessary commands so that `make <target>` works
-# 2. Modular platform makefiles that define functions so
-#    compile/assembly/link is handled the same way on each platform
-# 3. The main things a developer would need to modify (such as
-#    variables with source file lists) are in this Makefile
-# 4. Be able to directly call a <platform>.mk with `make -f`#
-# 5. Short simple makefiles that aren't filled with all kinds of
-#    ifdefs
-#
-# Unfortunately I have failed on simplicity. It's still yucky
-# complicated stuff that I hate because nobody else can make sense of
-# it.
-
 # Make a list of the things we want to build which combine R2R dir, app name, and platform
 APP_TARGETS := $(foreach p, $(PLATFORMS), $(R2R_DIR)/$(p)/$(PRODUCT))
 

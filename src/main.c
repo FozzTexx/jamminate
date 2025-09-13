@@ -155,7 +155,7 @@ int main()
 
   printf("FujiNet: %-14s  Make: ???\n", ace.fn_version);
 
-  printf("Opening OSC listener %s:%s...\n", ace.localIP, PORT);
+  printf("Opening OSC listener %s:%s...\n", ace.hostname, PORT);
 
   err = network_open(SOCKET, OPEN_MODE_RW, 0);
   for (;;) {

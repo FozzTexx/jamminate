@@ -1,24 +1,38 @@
-# Check zip time
-# git URL
-
 PRODUCT = jammin8
 PLATFORMS = coco
-#PLATFORMS += apple2 atari c64 adam msdos
+PLATFORMS += apple2 atari c64 adam msdos
 
-SRC_DIRS = src src/$(PLATFORM)
+# You can run 'make <platform>' to build for a specific platform,
+# or 'make <platform>/<target>' for a platform-specific target.
+# Example shortcuts:
+#   make coco        → build for coco
+#   make apple2/disk → build the 'disk' target for apple2
+
+# SRC_DIRS may use the literal %PLATFORM% token.
+# It expands to the chosen PLATFORM plus any of its combos.
+SRC_DIRS = src src/%PLATFORM%
 
 # FUJINET_LIB can be
 # - a version number such as 4.7.6
 # - a directory which contains the libs for each platform
 # - a zip file with an archived fujinet-lib
 # - empty which will use whatever is the latest
+# - undefined, no fujinet-lib will be used
 FUJINET_LIB = ../fujinet-lib/build
 
 EXTRA_INCLUDE = ../fujinet-lib/coco/src/include
 #EXTRA_INCLUDE = ../fujinet-lib-unified/bus/coco
 
-# FIXME - Hack to build inside of defoogi. Maybe only fallback on
-#         defoogi if build tools are missing?
-#MAKE := defoogi -e FUJINET_LIB $(MAKE)
+# If you need to add extra platform-specific steps, do it here:
+#   coco/r2r:: coco/custom-step1
+#   coco/r2r:: coco/custom-step2
+# or
+#   apple2/disk: apple2/custom-step1 apple2/custom-step2
+
+# Define extra dirs ("combos") that expand with a platform.
+# Format: platform+=combo1,combo2
+PLATFORM_COMBOS = \
+  c64+=commodore \
+  atarixe+=atari
 
 include makefiles/toplevel-rules.mk

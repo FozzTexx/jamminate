@@ -1,12 +1,17 @@
 CC = wcc
 AS = wasm
-CFLAGS = -0 -bt=dos -ms -s -osh -zu -I$(FUJINET_LIB_INCLUDE)
-AFLAGS =
-LIBS = $(FUJINET_LIB_LDLIB)
-LD = wlink OPTION quiet
-LDFLAGS = SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
-
+CFLAGS += -0 -bt=dos -ms -s -osh -zu
 CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
+AFLAGS +=
+LD = wlink OPTION quiet
+LDFLAGS += SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
+
+ifdef FUJINET_LIB_INCLUDE
+  CFLAGS += -I$(FUJINET_LIB_INCLUDE)
+endif
+ifdef FUJINET_LIB_DIR
+  LIBS += $(FUJINET_LIB_LDLIB)
+endif
 
 define link-bin
   $(LD) $(LDFLAGS) \
