@@ -1,6 +1,6 @@
 PRODUCT = jammin8
 PLATFORMS = coco
-PLATFORMS += apple2 atari c64 adam msdos
+#PLATFORMS += apple2 atari c64 adam msdos
 
 # You can run 'make <platform>' to build for a specific platform,
 # or 'make <platform>/<target>' for a platform-specific target.

@@ -105,7 +105,10 @@ class LibLocator:
     # to be used with the `-l` flag. Create symlink if necessary.
     if self.PLATFORM == "coco":
       if not re.match(LDLIB_REGEX, self.MV.FUJINET_LIB_FILE):
-        symlink_file = f"libfujinet-{self.PLATFORM}-{self.MV.FUJINET_LIB_VERSION}.a"
+        version = ""
+        if self.MV.FUJINET_LIB_VERSION:
+          version = f"-{self.MV.FUJINET_LIB_VERSION}"
+        symlink_file = f"libfujinet-{self.PLATFORM}{version}.a"
         symlink_path = os.path.join(self.MV.FUJINET_LIB_DIR, symlink_file)
         if not os.path.exists(symlink_path):
           os.symlink(self.MV.FUJINET_LIB_FILE, symlink_path)
