@@ -18,7 +18,7 @@ SRC_DIRS = src src/%PLATFORM%
 # - a zip file with an archived fujinet-lib
 # - empty which will use whatever is the latest
 # - undefined, no fujinet-lib will be used
-FUJINET_LIB = ../fujinet-lib/build
+FUJINET_LIB = ../fujinet-lib-unified/build
 
 EXTRA_INCLUDE = ../fujinet-lib/coco/src/include
 #EXTRA_INCLUDE = ../fujinet-lib-unified/bus/coco

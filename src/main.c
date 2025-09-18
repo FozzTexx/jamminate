@@ -1,3 +1,9 @@
+#define WITH_4VOICE 1
+#if WITH_4VOICE
+#include "coco/4voice.h"
+#include "coco/serial.h"
+#endif
+
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
 #include <fujinet-network-coco.h>
@@ -5,6 +11,9 @@
 #define PORT "6573"
 #define SOCKET "N:TCP://:" PORT
 #define FRAMING 0xC0
+
+#define PIA2_REG0 ((uint8_t *) 0xFF20)
+#define PIA2_REG1 (PIA2_REG0 + 1)
 
 extern void play_string(const char *notes);
 
@@ -140,6 +149,30 @@ uint16_t parse_osc_message(uint8_t *msg, uint16_t msglen,
   return offset + pos;
 }
 
+void setup_cd_flag()
+{
+  uint8_t val, prev;
+
+
+  val = *PIA2_REG1;
+  val &= 0xFC; // Disable FIRQ, flag on falling edge (CD off to on)
+  val |= 2; // flag on rising edge (CD on to off)
+  *PIA2_REG1 = val;
+  (void) *PIA2_REG0; // Clear the CD flag}
+
+#if 0
+  for (prev = 0;; prev = val) {
+    val = *PIA2_REG1;
+    if (val != prev) {
+      printf("%02x\n", val);
+      (void) *PIA2_REG0; // Clear the CD flag
+    }
+  }
+#endif
+
+  return;
+}
+
 int main()
 {
   int16_t rlen, pos;
@@ -149,6 +182,29 @@ int main()
   char *osc_addr, *osc_types, *osc_values;
 
 
+  // FIXME - init waveform
+  // FIXME - setup voice 1
+  // FIXME - setup note
+
+#if WITH_4VOICE
+  // Start playing
+  init_dac();
+  init_interrupts();
+#endif
+
+  for (avail = 0; avail < 100; avail++)
+    printf("%u ", avail);
+  printf("\n");
+
+#if 0
+  stop_playback();
+  serial_on();
+  exit(0);
+#endif
+
+#if WITH_4VOICE
+  serial_on();
+#endif
   printf("Searching for FujiNet...\n");
   if (!fuji_get_adapter_config_extended(&ace))
     strcpy(ace.fn_version, "FAIL");
@@ -156,6 +212,8 @@ int main()
   printf("FujiNet: %-14s  Make: ???\n", ace.fn_version);
 
   printf("Opening OSC listener %s:%s...\n", ace.hostname, PORT);
+
+  setup_cd_flag();
 
   err = network_open(SOCKET, OPEN_MODE_RW, 0);
   for (;;) {
@@ -169,25 +227,42 @@ int main()
 
   printf("Accepting connection...\n");
   err = network_accept(SOCKET);
+
   if (err) {
     printf("ACCEPT FAIL: %u\n", err);
     exit(1);
   }
 
+#if WITH_4VOICE
+  sound_on();
+#endif
+  (void) *PIA2_REG0; // Clear the CD flag
   printf("Waiting for data...\n");
   for (;;) {
+    printf("WAITING\n");
     for (;;) {
-      // Wait for data to become available
+      if (inkey()) {
+        avail = 0;
+        err = -1;
+        break;
+      }
+
+      // Check if data is available
+#if 0
       if (network_status(SOCKET, &avail, &status, &err))
         break;
       if (avail) {
         err = 0;
         break;
       }
-      if (inkey()) {
-        err = -1;
+#else
+      if ((*PIA2_REG1) & 0x80) {
+        while ((*PIA2_REG1) & 0x80)
+          (void) *PIA2_REG0; // Clear the CD flag
+        avail = sizeof(buffer);
         break;
       }
+#endif // 0
     }
 
     printf("STATUS: A=%u S=%u E=%u\n", avail, status, err);
@@ -197,7 +272,18 @@ int main()
       break;
     }
 
+#if WITH_4VOICE
+    printf("OFF INT\n");
+    //restore_interrupts();
+    serial_on();
+    printf("NOW OFF\n");
+#endif
     rlen = network_read_nb(SOCKET, buffer, avail);
+    printf("RLEN: %d\n", rlen);
+#if WITH_4VOICE
+    //init_interrupts();
+    sound_on();
+#endif
 #if 0
     if (!rlen)
       continue;
@@ -229,7 +315,9 @@ int main()
           note %= 12;
           sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
           printf("PLAYING %s\n", buffer);
+#if !WITH_4VOICE
           play_string((char *) buffer);
+#endif
         }
       }
 
@@ -239,9 +327,15 @@ int main()
 
     if (rlen) {
       printf("Received: %d\n", rlen);
-      hexdump(&buffer[pos], rlen);
+      //hexdump(&buffer[pos], rlen);
     }
   }
+
+#if WITH_4VOICE
+  stop_playback();
+  serial_on();
+  // FIXME - don't leave interupts off
+#endif
 
   network_close(SOCKET);
 
