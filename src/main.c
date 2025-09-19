@@ -1,7 +1,8 @@
 #define WITH_4VOICE 1
-#if 1 // WITH_4VOICE
+#if WITH_4VOICE
 #include "coco/4voice.h"
 #include "coco/serial.h"
+#include "conductor.h"
 #endif
 
 #include <fujinet-fuji.h>
@@ -20,9 +21,6 @@ extern void play_string(const char *notes);
 AdapterConfigExtended ace;
 
 uint8_t buffer[256];
-const char *note_name[] = {
-  "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B ",
-};
 
 #define COLUMNS 6
 
@@ -185,10 +183,6 @@ int main()
   char *osc_addr, *osc_types, *osc_values;
 
 
-  // FIXME - init waveform
-  // FIXME - setup voice 1
-  // FIXME - setup note
-
 #if WITH_4VOICE
   // Start playing
   init_dac();
@@ -302,36 +296,16 @@ int main()
         break;
 
       {
-        uint16_t octave, note, freq;
-        uint8_t voice;
-        //uint32_t *velocity = (uint32_t *) osc_values;
+        uint16_t note;
 
 
         //printf("Addr: %s  Types: %s  Value: %d\n", osc_addr, osc_types, *osc_values);
 
-        if (*osc_values) {
-          note = atoi(osc_addr + 1);
-          octave = note / 12;
-          note %= 12;
-          //printf("NOTE: %u OCTAVE: %u\n", note, octave);
-#if 0 //!WITH_4VOICE
-          sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
-          printf("PLAYING %s\n", buffer);
-          play_string((char *) buffer);
-#else
-          sprintf((char *) buffer, "%s%u", note_name[note], octave);
-          freq = get_freq_value((char *) buffer);
-          //printf("ARGS: %04x %04x %04x\n", buffer, scratch, freq);
-          //printf("PLAYING -%s- %x\n", buffer, freq);
-          for (voice = 1; voice <= 4; voice++)
-            start_voice(voice, freq);
-          //printf("SCRATCH: %04x\n", scratch);
-#endif
-        }
-        else {
-          for (voice = 1; voice <= 4; voice++)
-            start_voice(voice, 0); // frequency of 0 "stops" the voice
-        }
+        note = atoi(osc_addr + 1);
+        if (*osc_values)
+          start_note(note);
+        else
+          stop_note(note);
       }
 
       rlen -= end_of_packet;

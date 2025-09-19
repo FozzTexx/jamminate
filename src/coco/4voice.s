@@ -82,7 +82,7 @@
 ; 5,240 times per second.
 ; ---------------------------------------------------------------
 	section	code
-	rmb 164
+	rmb 77
 	;align 256
 
 SoundOut:
@@ -263,7 +263,7 @@ NextNoteInfo:
 ; ---------------------------------------------------------------
 _start_voice:
 		LDA	3,S			; get voice
-		LSLA				; multiply by 2zgg
+		LSLA				; multiply by 2
 		LDX	#VoiceToFreqAddr	; X -> beginning of table
 		LDX	A,X			; X = addr fetched from user-specified entry of table
 		LDD	4,S			; get frequency
