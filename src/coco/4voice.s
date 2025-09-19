@@ -34,6 +34,9 @@
 	export _restore_interrupts
 	export _sound_off
 	export _get_freq_value
+	export _start_voice
+
+	export _scratch
 
 	export _WaveTableSine256
 
@@ -79,13 +82,14 @@
 ; 5,240 times per second.
 ; ---------------------------------------------------------------
 	section	code
-	align	256
+	rmb 164
+	;align 256
 
 SoundOut:
 		LDD	#SoundOut	; Set DP so int handler can run faster
 		TFR	A,DP		; RTI will restore original DP (+ all regs)
 WaveOff1	LDD	#$0000		; SMC: A = current offset into wavetable, B = fractional part
-FreqValue1	ADDD	#$0664		; SMC: A & B updated based on note's frequency
+FreqValue1	ADDD	#$0000		; SMC: A & B updated based on note's frequency
 		STD	<WaveOff1+1	; SMC: store updated A & B as next wave offset
 		STA	<SumWaveTbl1+2	; SMC: store MSB of offset as LSB of WaveTable address (summing voices below)
 		; Voice 2 calculation
@@ -105,9 +109,9 @@ FreqValue4	ADDD	#$0000
 		STA	<SumWaveTbl4+2
 		; Sum voices and play result
 SumWaveTbl1	LDA	>_WaveTableSine256		; SMC: Get voice 1 value from wavetable
-SumWaveTbl2	ADDA	>$0000		; SMC: Add voice 2 value from wavetable
-SumWaveTbl3	ADDA	>$0000		; SMC: Add voice 3 value from wavetable
-SumWaveTbl4	ADDA	>$0000		; SMC: Add voice 4 value from wavetable
+SumWaveTbl2	ADDA	>_WaveTableSine256		; SMC: Add voice 2 value from wavetable
+SumWaveTbl3	ADDA	>_WaveTableSine256		; SMC: Add voice 3 value from wavetable
+SumWaveTbl4	ADDA	>_WaveTableSine256		; SMC: Add voice 4 value from wavetable
 		STA	>$FF20		; Send sum of all voices out on DAC
 		LDA	>$FF00		; ack HS irq
 		RTI
@@ -227,10 +231,12 @@ _sound_off:
 
 ; ---------------------------------------------------------------
 ; _get_freq_value sub
-; Entry: X -> first character of 3-byte note string
+; Entry: stack + 2 -> pointer to 3-byte note string
 ; Exit: D = freq val, or 0 if string not a valid note
 ; ---------------------------------------------------------------
 _get_freq_value:
+		LDX	2,S
+		PSHS	U
 		LDU	#NoteFreqs	; U -> note table
 NoteInfoLoop:
 		LDD	,U
@@ -241,13 +247,30 @@ NoteInfoLoop:
 		BNE	NextNoteInfo	; nope
 		; We have a match!
 		LDD	NoteInfo.FreqValue,U
+		PULS	U
 		RTS
 NextNoteInfo:
 		LEAU	sizeof{NoteInfo},U
 		TST	,U		; Terminating 0?
 		BNE	NoteInfoLoop	; No, loop up
-		LDD	#0		; Yes, no match found
+		LDD	#1		; Yes, no match found
+		PULS	U
 		RTS
+
+; ---------------------------------------------------------------
+; Entry: stack + 3 -> voice num
+;        stack + 4 -> frequency
+; ---------------------------------------------------------------
+_start_voice:
+		LDA	3,S			; get voice
+		LSLA				; multiply by 2zgg
+		LDX	#VoiceToFreqAddr	; X -> beginning of table
+		LDX	A,X			; X = addr fetched from user-specified entry of table
+		LDD	4,S			; get frequency
+		STD	,X			; Set frequency
+		RTS
+VoiceToFreqAddr:
+		FDB	$0000,FreqValue1+1,FreqValue2+1,FreqValue3+1,FreqValue4+1
 
 
 ; Attributes for each note
@@ -256,12 +279,16 @@ Name		RMB	3		; e.g., "C#4" It is assumed this field comes first
 FreqValue	RMB	2
 		ENDSTRUCT
 
+_scratch:
+	FDB	$0000,$0000,$0000,$0000
+
 ; Table of NoteInfo structs
 NoteFreqs:
 		INCLUDE NoteFrequencyValues256.inc
 
 ; Waveform tables, 256-bytes each
-		ALIGN	$100			; Ensure waveform tables begin on page boundary
+		;ALIGN	$100			; Ensure waveform tables begin on page boundary
+	rmb 205
 _WaveTableSine256:
 		INCLUDE WaveTableSine256.inc
 ;; 		INCLUDE WgSine.asm

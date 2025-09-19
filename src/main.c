@@ -1,5 +1,5 @@
 #define WITH_4VOICE 1
-#if WITH_4VOICE
+#if 1 // WITH_4VOICE
 #include "coco/4voice.h"
 #include "coco/serial.h"
 #endif
@@ -20,6 +20,9 @@ extern void play_string(const char *notes);
 AdapterConfigExtended ace;
 
 uint8_t buffer[256];
+const char *note_name[] = {
+  "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B ",
+};
 
 #define COLUMNS 6
 
@@ -239,7 +242,7 @@ int main()
   (void) *PIA2_REG0; // Clear the CD flag
   printf("Waiting for data...\n");
   for (;;) {
-    printf("WAITING\n");
+    //printf("WAITING\n");
     for (;;) {
       if (inkey()) {
         avail = 0;
@@ -265,7 +268,7 @@ int main()
 #endif // 0
     }
 
-    printf("STATUS: A=%u S=%u E=%u\n", avail, status, err);
+    //printf("STATUS: A=%u S=%u E=%u\n", avail, status, err);
 
     if (err) {
       printf("CONNECTION ERROR: A=%u S=%u E=%u\n", avail, status, err);
@@ -273,15 +276,11 @@ int main()
     }
 
 #if WITH_4VOICE
-    printf("OFF INT\n");
-    //restore_interrupts();
     serial_on();
-    printf("NOW OFF\n");
 #endif
     rlen = network_read_nb(SOCKET, buffer, avail);
-    printf("RLEN: %d\n", rlen);
+    //printf("RLEN: %d\n", rlen);
 #if WITH_4VOICE
-    //init_interrupts();
     sound_on();
 #endif
 #if 0
@@ -289,7 +288,7 @@ int main()
       continue;
 #endif
     if (rlen <= 0) {
-      printf("READ ERROR: %d\n", rlen);
+      //printf("READ ERROR: %d\n", rlen);
       break;
     }
 
@@ -303,21 +302,35 @@ int main()
         break;
 
       {
-        uint16_t octave, note;
-        uint32_t *velocity = (uint32_t *) osc_values;
+        uint16_t octave, note, freq;
+        uint8_t voice;
+        //uint32_t *velocity = (uint32_t *) osc_values;
 
 
-        printf("Addr: %s  Types: %s  Value: %ld\n", osc_addr, osc_types, *velocity);
+        //printf("Addr: %s  Types: %s  Value: %d\n", osc_addr, osc_types, *osc_values);
 
-        if (*velocity) {
+        if (*osc_values) {
           note = atoi(osc_addr + 1);
           octave = note / 12;
           note %= 12;
+          //printf("NOTE: %u OCTAVE: %u\n", note, octave);
+#if 0 //!WITH_4VOICE
           sprintf((char *) buffer, "O%u;L8;%u;", octave, note + 1);
           printf("PLAYING %s\n", buffer);
-#if !WITH_4VOICE
           play_string((char *) buffer);
+#else
+          sprintf((char *) buffer, "%s%u", note_name[note], octave);
+          freq = get_freq_value((char *) buffer);
+          //printf("ARGS: %04x %04x %04x\n", buffer, scratch, freq);
+          //printf("PLAYING -%s- %x\n", buffer, freq);
+          for (voice = 1; voice <= 4; voice++)
+            start_voice(voice, freq);
+          //printf("SCRATCH: %04x\n", scratch);
 #endif
+        }
+        else {
+          for (voice = 1; voice <= 4; voice++)
+            start_voice(voice, 0); // frequency of 0 "stops" the voice
         }
       }
 

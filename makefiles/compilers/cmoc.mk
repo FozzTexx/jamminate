@@ -1,8 +1,8 @@
 CC = cmoc
 AS = lwasm
-CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
-AFLAGS +=
-LDFLAGS +=
+CFLAGS += -i --intdir=$(OBJ_DIR) $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
+AFLAGS += -i
+LDFLAGS += -V
 
 ifdef FUJINET_LIB_INCLUDE
   CFLAGS += -I$(FUJINET_LIB_INCLUDE)

@@ -20,6 +20,12 @@ _serial_on:
 	RTS
 
 _sound_on:
+	; We will still get no sound out unless we activate the
+	; master select switch (required no matter which sound
+	; source we're selecting).
+	LDA	>$FF23		; PIA2 CRB / CB2 - master select switch
+	ORA	#%00001000	; CB2 outputs a high (1)
+	STA	>$FF23
 	LDB	>$FF21		; Get PIA2 CRA
 	ANDB	#%11111011	; bit 2 = 0 -> access data direction register
 	STB	>$FF21
