@@ -5,9 +5,14 @@ MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk
 include $(MWD)/compilers/cmoc.mk
 
-r2r:: $(DISK)
+DISK_EXTRA := $(DISK_EXTRA_$(PLATFORM_UC))
+EXECUTABLE_EXTRA := $(EXECUTABLE_EXTRA_$(PLATFORM_UC))
 
-$(DISK): $(EXECUTABLE) | $(R2R_PD)
+r2r:: $(DISK)
+	@make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post
+
+$(DISK): $(EXECUTABLE) $(DISK_EXTRA) | $(R2R_PD)
 	$(RM) $@
 	decb dskini $@
 	decb copy -b -2 $< $@,$(shell echo $(PRODUCT) | tr '[:lower:]' '[:upper:]').BIN
+	@make -f $(PLATFORM_MK) $(PLATFORM)/disk-post

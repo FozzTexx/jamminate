@@ -4,6 +4,15 @@
 _serial_on:
 	ORCC	#$50		; Disable all interrupts
 
+	LDB	>$FF20
+	ANDB	#$FC
+voldown:
+	BEQ	volzero
+	SUBB	#$04
+	STB	>$FF20
+	BRA	voldown
+
+volzero:
 	LDB	#$02
 	STB	>$FF20
 

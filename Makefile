@@ -23,12 +23,6 @@ FUJINET_LIB = ../fujinet-lib-unified/build
 EXTRA_INCLUDE = ../fujinet-lib/coco/src/include
 #EXTRA_INCLUDE = ../fujinet-lib-unified/bus/coco
 
-# If you need to add extra platform-specific steps, do it here:
-#   coco/r2r:: coco/custom-step1
-#   coco/r2r:: coco/custom-step2
-# or
-#   apple2/disk: apple2/custom-step1 apple2/custom-step2
-
 # Define extra dirs ("combos") that expand with a platform.
 # Format: platform+=combo1,combo2
 PLATFORM_COMBOS = \
@@ -36,3 +30,23 @@ PLATFORM_COMBOS = \
   atarixe+=atari
 
 include makefiles/toplevel-rules.mk
+
+# If you need to add extra platform-specific steps, do it here:
+#   coco/r2r:: coco/custom-step1
+#   coco/r2r:: coco/custom-step2
+# or
+#   apple2/disk: apple2/custom-step1 apple2/custom-step2
+
+# DISK_EXTRA_COCO := r2r/coco/4voice.bin
+# coco/disk-post::
+# 	for FILE in $(DISK_EXTRA_COCO) ; do \
+# 	    DEST="$$(basename $${FILE} | tr '[:lower:]' '[:upper:]')" ; \
+# 	    decb copy -b -2 "$${FILE}" "$(DISK),$${DEST}" ; \
+# 	done
+
+4VOICE_BIN = r2r/coco/4voice.bin
+coco/executable-post::
+	./merge-coco-bin.py $(4VOICE_BIN) $(EXECUTABLE) $(EXECUTABLE)
+
+$(4VOICE_BIN):: src/coco/4voice/4voice.s | $(R2R_PD)
+	lwasm -b -9 -o $@ $<

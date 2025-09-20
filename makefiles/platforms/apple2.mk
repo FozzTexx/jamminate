@@ -6,6 +6,7 @@ include $(MWD)/common.mk
 include $(MWD)/compilers/cc65.mk
 
 r2r:: $(DISK)
+	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post
 
 PRODOS_VERSION = 2.4.3
 PRODOS8_DISK := $(CACHE_PLATFORM)/PRODOS8-$(PRODOS_VERSION).po
@@ -16,6 +17,7 @@ $(DISK): $(EXECUTABLE) $(PRODOS8_DISK) | $(R2R_PD)
 	acx create -d $@ --format $(PRODOS8_DISK) --prodos --size=140kb --name=$(PRODUCT)
 	ac -as $@ $(PRODUCT) < $<
 	ac -p $@ $(PRODUCT).SYSTEM SYS 0x2000 < $(CC65_UTILS_DIR)/$(LOADER_SYSTEM)
+	make -f $(PLATFORM_MK) $(PLATFORM)/disk-post
 
 # Download and cache ProDOS disk if necessary
 PRODOS_URL = https://releases.prodos8.com

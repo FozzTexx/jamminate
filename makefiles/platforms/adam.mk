@@ -5,3 +5,4 @@ include $(MWD)/common.mk
 include $(MWD)/compilers/z88dk.mk
 
 r2r:: $(EXECUTABLE)
+	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post

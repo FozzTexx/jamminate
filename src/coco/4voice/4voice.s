@@ -28,17 +28,28 @@
 ; |                                                                            |
 ; ------------------------------------------------------------------------------
 
-	export _stop_playback
-	export _init_dac
-	export _init_interrupts
-	export _restore_interrupts
-	export _sound_off
-	export _get_freq_value
-	export _start_voice
+	;; export _init_playback
+	;; export _stop_playback
+	;; export _get_freq_value
+	;; export _start_voice
 
-	export _scratch
+	;; section	code
 
-	export _WaveTableSine256
+	org	$2800
+
+	;; jmp	_init_playback
+	;; jmp	_stop_playback
+	;; jmp	_get_freq_value
+	;; jmp	_start_voice
+
+	rts
+	fdb 0
+	rts
+	fdb 0
+	rts
+	fdb 0
+	rts
+	fdb 0
 
 ; ---------------------------------------------------------------
 ; Waveform page numbers (for use in SetWaveform)
@@ -81,9 +92,6 @@
 ; line (instead of on contiguous lines).  That equates to
 ; 5,240 times per second.
 ; ---------------------------------------------------------------
-	section	code
-	rmb 77
-	;align 256
 
 SoundOut:
 		LDD	#SoundOut	; Set DP so int handler can run faster
@@ -112,9 +120,17 @@ SumWaveTbl1	LDA	>_WaveTableSine256		; SMC: Get voice 1 value from wavetable
 SumWaveTbl2	ADDA	>_WaveTableSine256		; SMC: Add voice 2 value from wavetable
 SumWaveTbl3	ADDA	>_WaveTableSine256		; SMC: Add voice 3 value from wavetable
 SumWaveTbl4	ADDA	>_WaveTableSine256		; SMC: Add voice 4 value from wavetable
+		ORA	$02		; Keep RS232 TX high for when it's enabled again
 		STA	>$FF20		; Send sum of all voices out on DAC
 		LDA	>$FF00		; ack HS irq
 		RTI
+
+; ---------------------------------------------------------------
+; Get everything ready for playback
+; ---------------------------------------------------------------
+_init_playback:
+		JSR	_init_dac
+		JMP	_init_interrupts
 
 ; ---------------------------------------------------------------
 ; Stop all playback by restoring regular FS, and disabling HS
@@ -270,7 +286,7 @@ _start_voice:
 		STD	,X			; Set frequency
 		RTS
 VoiceToFreqAddr:
-		FDB	$0000,FreqValue1+1,FreqValue2+1,FreqValue3+1,FreqValue4+1
+		FDB	FreqValue1+1,FreqValue2+1,FreqValue3+1,FreqValue4+1
 
 
 ; Attributes for each note
@@ -279,26 +295,22 @@ Name		RMB	3		; e.g., "C#4" It is assumed this field comes first
 FreqValue	RMB	2
 		ENDSTRUCT
 
-_scratch:
-	FDB	$0000,$0000,$0000,$0000
-
 ; Table of NoteInfo structs
 NoteFreqs:
 		INCLUDE NoteFrequencyValues256.inc
 
 ; Waveform tables, 256-bytes each
-		;ALIGN	$100			; Ensure waveform tables begin on page boundary
-	rmb 205
+		ALIGN	$100			; Ensure waveform tables begin on page boundary
 _WaveTableSine256:
 		INCLUDE WaveTableSine256.inc
-;; 		INCLUDE WgSine.asm
-;; 		INCLUDE WaveTableSquare256.asm
-;; 		INCLUDE WgSquare.asm
-;; 		INCLUDE WgTrapez.asm
-;; 		INCLUDE WgOrgan.asm
-;; 		INCLUDE WgSawtooth.asm
-;; 		INCLUDE WgTriangle.asm
-;; 		INCLUDE WgViolin.asm
-;; 		INCLUDE WgImpulse.asm
+		INCLUDE WgSine.inc
+		INCLUDE WaveTableSquare256.inc
+		INCLUDE WgSquare.inc
+		INCLUDE WgTrapez.inc
+		INCLUDE WgOrgan.inc
+		INCLUDE WgSawtooth.inc
+		INCLUDE WgTriangle.inc
+		INCLUDE WgViolin.inc
+		INCLUDE WgImpulse.inc
 
 		END

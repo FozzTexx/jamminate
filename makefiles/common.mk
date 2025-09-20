@@ -3,8 +3,9 @@ define pop
 endef
 
 # Automatically figure out PLATFORM from the .mk file that included us
-MKLIST_PREV := $(call pop,$(MAKEFILE_LIST))
-PLATFORM := $(basename $(notdir $(lastword $(MKLIST_PREV))))
+PLATFORM_MK := $(call pop,$(MAKEFILE_LIST))
+PLATFORM := $(basename $(notdir $(lastword $(PLATFORM_MK))))
+PLATFORM_UC := $(shell echo "$(PLATFORM)" | tr '[:lower:]' '[:upper:]')
 $(info Building for PLATFORM=$(PLATFORM))
 
 include $(MWD)/../Makefile
@@ -34,11 +35,10 @@ AFILES := $(foreach dir,$(SRC_DIRS_EXPANDED),$(wildcard $(dir)/*.s)) \
 # Need two steps: AFILES may be .s or .asm; `make` swaps one suffix at a time
 NORM_AFILES := $(AFILES:.asm=.s)
 OBJS := $(addprefix $(OBJ_DIR)/, $(notdir $(CFILES:.c=.o) $(NORM_AFILES:.s=.o)))
-$(info OBJS=$(OBJS))
 
-$(info EXECUTABLE=$(EXECUTABLE))
 $(EXECUTABLE): $(OBJS) | $(R2R_PD)
 	$(link-bin)
+	@make -f $(PLATFORM_MK) $(PLATFORM)/executable-post
 
 # auto-created dirs
 AUTO_DIRS := $(OBJ_DIR) $(R2R_PD) $(CACHE_PLATFORM)
@@ -74,6 +74,18 @@ debug::
 # The double-colon form appends without overwriting existing deps.
 r2r:: $(PLATFORM)/r2r
 disk:: $(PLATFORM)/disk
+
+# Fallback rule so every <platform>/disk-post target exists.
+# Does nothing by default (@:).
+# In the top-level Makefile you can extend it with the literal platform name,
+# e.g.:
+#   coco/disk-post:: coco/extra-file
+$(PLATFORM)/disk-post::
+	@:
+
+# Same as $(PLATFORM)/disk-post above
+$(PLATFORM)/r2r-post::
+	@:
 
 # include autodeps
 -include $(wildcard $(OBJ_DIR)/*.d)

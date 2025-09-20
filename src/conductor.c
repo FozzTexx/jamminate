@@ -28,7 +28,7 @@ void start_note(uint16_t note)
     return;
 
   playing[voice] = note;
-  start_voice(voice + 1, freq);
+  start_voice(voice, freq);
 
   return;
 }
@@ -40,7 +40,7 @@ void stop_note(uint16_t note)
 
   for (voice = 0; voice < MAX_VOICES; voice++) {
     if (playing[voice] == note) {
-      start_voice(voice + 1, 0); // frequency of 0 "stops" the voice
+      start_voice(voice, 0); // frequency of 0 "stops" the voice
       playing[voice] = 0;
       break;
     }

@@ -1,9 +1,6 @@
-#define WITH_4VOICE 1
-#if WITH_4VOICE
 #include "coco/4voice.h"
 #include "coco/serial.h"
 #include "conductor.h"
-#endif
 
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
@@ -179,40 +176,31 @@ int main()
   int16_t rlen, pos;
   uint8_t err, status;
   uint16_t avail;
+  size_t length;
   char *ptr;
   char *osc_addr, *osc_types, *osc_values;
 
 
-#if WITH_4VOICE
-  // Start playing
-  init_dac();
-  init_interrupts();
-#endif
-
-  for (avail = 0; avail < 100; avail++)
-    printf("%u ", avail);
-  printf("\n");
-
-#if 0
-  stop_playback();
-  serial_on();
-  exit(0);
-#endif
-
-#if WITH_4VOICE
-  serial_on();
-#endif
   printf("Searching for FujiNet...\n");
   if (!fuji_get_adapter_config_extended(&ace))
     strcpy(ace.fn_version, "FAIL");
 
-  printf("FujiNet: %-14s  Make: ???\n", ace.fn_version);
+  printf("FujiNet: %-14s\n", ace.fn_version);
+
+#if 0
+  printf("Loading 4VOICE.BIN...\n");
+  err = readDECBFile(ORG_4VOICE, 0, "4VOICE  BIN", buffer, &length);
+  if (err) {
+    printf("FAILED TO LOAD: %d\n", err);
+    exit(1);
+  }
+  printf("Loaded\n");
+#endif
 
   printf("Opening OSC listener %s:%s...\n", ace.hostname, PORT);
-
-  setup_cd_flag();
-
   err = network_open(SOCKET, OPEN_MODE_RW, 0);
+  printf("Waiting for connection\n");
+
   for (;;) {
     err = network_status(SOCKET, &avail, &status, &err);
     //printf("AVAIL: %u  STATUS: %u  ERR: %u\n", avail, status, err);
@@ -230,13 +218,14 @@ int main()
     exit(1);
   }
 
-#if WITH_4VOICE
-  sound_on();
-#endif
+  printf("Connected\n");
+
+  init_playback();
+  setup_cd_flag();
+
   (void) *PIA2_REG0; // Clear the CD flag
   printf("Waiting for data...\n");
   for (;;) {
-    //printf("WAITING\n");
     for (;;) {
       if (inkey()) {
         avail = 0;
@@ -245,21 +234,12 @@ int main()
       }
 
       // Check if data is available
-#if 0
-      if (network_status(SOCKET, &avail, &status, &err))
-        break;
-      if (avail) {
-        err = 0;
-        break;
-      }
-#else
       if ((*PIA2_REG1) & 0x80) {
         while ((*PIA2_REG1) & 0x80)
           (void) *PIA2_REG0; // Clear the CD flag
         avail = sizeof(buffer);
         break;
       }
-#endif // 0
     }
 
     //printf("STATUS: A=%u S=%u E=%u\n", avail, status, err);
@@ -269,18 +249,15 @@ int main()
       break;
     }
 
-#if WITH_4VOICE
     serial_on();
-#endif
     rlen = network_read_nb(SOCKET, buffer, avail);
-    //printf("RLEN: %d\n", rlen);
-#if WITH_4VOICE
     sound_on();
-#endif
+
 #if 0
     if (!rlen)
       continue;
 #endif
+
     if (rlen <= 0) {
       //printf("READ ERROR: %d\n", rlen);
       break;
@@ -288,6 +265,7 @@ int main()
 
     for (pos = 0; rlen;) {
       uint16_t end_of_packet;;
+      uint16_t note;
 
 
       end_of_packet = parse_osc_message(&buffer[pos], rlen,
@@ -295,18 +273,13 @@ int main()
       if (!osc_addr)
         break;
 
-      {
-        uint16_t note;
+      //printf("Addr: %s  Types: %s  Value: %d\n", osc_addr, osc_types, *osc_values);
 
-
-        //printf("Addr: %s  Types: %s  Value: %d\n", osc_addr, osc_types, *osc_values);
-
-        note = atoi(osc_addr + 1);
-        if (*osc_values)
-          start_note(note);
-        else
-          stop_note(note);
-      }
+      note = atoi(osc_addr + 1);
+      if (*osc_values)
+        start_note(note);
+      else
+        stop_note(note);
 
       rlen -= end_of_packet;
       pos += end_of_packet;
@@ -318,13 +291,11 @@ int main()
     }
   }
 
-#if WITH_4VOICE
   stop_playback();
   serial_on();
-  // FIXME - don't leave interupts off
-#endif
-
   network_close(SOCKET);
+
+  // FIXME - don't leave interupts off?
 
   return 0;
 }

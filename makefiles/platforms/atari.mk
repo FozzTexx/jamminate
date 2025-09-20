@@ -6,6 +6,7 @@ include $(MWD)/common.mk
 include $(MWD)/compilers/cc65.mk
 
 r2r:: $(DISK)
+	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post
 
 PICOBOOT_BIN = picoboot.bin
 ATRBOOT := $(CACHE_PLATFORM)/$(PICOBOOT_BIN)
@@ -15,6 +16,7 @@ $(DISK): $(EXECUTABLE) $(ATRBOOT) | $(R2R_PD)
 	$(MKDIR_P) $(CACHE_PLATFORM)/disk
 	cp $< $(CACHE_PLATFORM)/disk
 	dir2atr -m -S -B $(ATRBOOT) $@ $(CACHE_PLATFORM)/disk
+	make -f $(PLATFORM_MK) $(PLATFORM)/disk-post
 
 PICOBOOT_DOWNLOAD_URL = https://github.com/FujiNetWIFI/assets/releases/download/picobin
 $(ATRBOOT): | $(CACHE_PLATFORM)
