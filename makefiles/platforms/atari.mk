@@ -5,13 +5,13 @@ MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk
 include $(MWD)/compilers/cc65.mk
 
-r2r:: $(DISK)
+r2r:: $(DISK) $(R2R_POSTDEPS)
 	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post
 
 PICOBOOT_BIN = picoboot.bin
 ATRBOOT := $(CACHE_PLATFORM)/$(PICOBOOT_BIN)
 
-$(DISK): $(EXECUTABLE) $(ATRBOOT) | $(R2R_PD)
+$(DISK): $(EXECUTABLE) $(ATRBOOT) $(DISK_POSTDEPS) | $(R2R_PD)
 	$(RM) $@
 	$(MKDIR_P) $(CACHE_PLATFORM)/disk
 	cp $< $(CACHE_PLATFORM)/disk

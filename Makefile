@@ -37,15 +37,15 @@ include makefiles/toplevel-rules.mk
 # or
 #   apple2/disk: apple2/custom-step1 apple2/custom-step2
 
-# DISK_EXTRA_COCO := r2r/coco/4voice.bin
+# DISK_POSTDEPS_COCO := r2r/coco/4voice.bin
 # coco/disk-post::
-# 	for FILE in $(DISK_EXTRA_COCO) ; do \
+# 	for FILE in $(DISK_POSTDEPS_COCO) ; do \
 # 	    DEST="$$(basename $${FILE} | tr '[:lower:]' '[:upper:]')" ; \
 # 	    decb copy -b -2 "$${FILE}" "$(DISK),$${DEST}" ; \
 # 	done
 
 4VOICE_BIN = r2r/coco/4voice.bin
-EXECUTABLE_EXTRA_COCO := $(4VOICE_BIN)
+EXECUTABLE_POSTDEPS_COCO := $(4VOICE_BIN)
 coco/executable-post:: $(4VOICE_BIN)
 	./merge-coco-bin.py $(4VOICE_BIN) $(EXECUTABLE) $(EXECUTABLE)
 

@@ -6,5 +6,5 @@ include $(MWD)/compilers/ow2.mk
 
 CFLAGS += -D__MSDOS__
 
-r2r:: $(EXECUTABLE)
+r2r:: $(EXECUTABLE) $(R2R_POSTDEPS)
 	make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post

@@ -36,7 +36,11 @@ AFILES := $(foreach dir,$(SRC_DIRS_EXPANDED),$(wildcard $(dir)/*.s)) \
 NORM_AFILES := $(AFILES:.asm=.s)
 OBJS := $(addprefix $(OBJ_DIR)/, $(notdir $(CFILES:.c=.o) $(NORM_AFILES:.s=.o)))
 
-$(EXECUTABLE):: $(OBJS) $(EXECUTABLE_EXTRA_$(PLATFORM_UC)) | $(R2R_PD)
+EXECUTABLE_POSTDEPS := $(EXECUTABLE_POSTDEPS_$(PLATFORM_UC))
+DISK_POSTDEPS := $(DISK_POSTDEPS_$(PLATFORM_UC))
+R2R_POSTDEPS := $(R2R_POSTDEPS_$(PLATFORM_UC))
+
+$(EXECUTABLE):: $(OBJS) $(EXECUTABLE_POSTDEPS) | $(R2R_PD)
 	$(call link-bin,$@,$(OBJS))
 	@make -f $(PLATFORM_MK) $(PLATFORM)/executable-post
 
