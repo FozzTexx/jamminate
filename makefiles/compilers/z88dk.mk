@@ -13,13 +13,13 @@ ifdef FUJINET_LIB_DIR
 endif
 
 define link-bin
-  $(CC) $(LDFLAGS) $^ $(LIBS) -o $@
+  $(CC) $(LDFLAGS) $2 $(LIBS) -o $1
 endef
 
 define compile
-  $(CC) -c $(CFLAGS) -o $@ $<
+  $(CC) -c $(CFLAGS) -o $1 $2
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $@ $<
+  $(CC) -c $(AFLAGS) -o $1 $2
 endef

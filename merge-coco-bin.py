@@ -37,6 +37,12 @@ def split_sections(data):
 
   return sections
 
+def print_sections(sections):
+  for section in sections:
+    print(f"type: {section.htype}  addr: {section.address:04x}  length: {len(section.data)}")
+  print()
+  return
+
 def main():
   args = build_argparser().parse_args()
 
@@ -46,14 +52,7 @@ def main():
     bin2 = f.read()
 
   sections1 = split_sections(bin1)
-  for section in sections1:
-    print(f"type: {section.htype}  addr: {section.address:04x}  length: {len(section.data)}")
-  print()
-
   sections2 = split_sections(bin2)
-  for section in sections2:
-    print(f"type: {section.htype}  addr: {section.address:04x}  length: {len(section.data)}")
-  print()
 
   merged = sections1[:-1]
   end_addr = max(x.address + len(x.data) for x in sections1)
@@ -63,10 +62,6 @@ def main():
     htype = section.htype
     address = section.address
     merged.append(CoCoSection(htype, address - first + start, section.data))
-
-  for section in merged:
-    print(f"type: {section.htype}  addr: {section.address:04x}  length: {len(section.data)}")
-  print()
 
   with open(args.output, mode="wb") as f:
     for section in merged:

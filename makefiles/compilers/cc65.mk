@@ -12,13 +12,13 @@ ifdef FUJINET_LIB_DIR
 endif
 
 define link-bin
-  $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $^ $(LIBS) -o $@
+  $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $2 $(LIBS) -o $1
 endef
 
 define compile
-  $(CC) -l $(basename $@).lst --create-dep $(OBJ_DIR)/$(basename $(notdir $<)).d -c $(CFLAGS) -t $(PLATFORM) -o $@ $<
+  $(CC) -l $(basename $1).lst --create-dep $(OBJ_DIR)/$(basename $(notdir $2)).d -c $(CFLAGS) -t $(PLATFORM) -o $1 $2
 endef
 
 define assemble
-  $(CC) -l $(basename $@).lst -c $(AFLAGS) -t $(PLATFORM) -o $@ $<
+  $(CC) -l $(basename $1).lst -c $(AFLAGS) -t $(PLATFORM) -o $1 $2
 endef

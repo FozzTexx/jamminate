@@ -36,8 +36,8 @@ AFILES := $(foreach dir,$(SRC_DIRS_EXPANDED),$(wildcard $(dir)/*.s)) \
 NORM_AFILES := $(AFILES:.asm=.s)
 OBJS := $(addprefix $(OBJ_DIR)/, $(notdir $(CFILES:.c=.o) $(NORM_AFILES:.s=.o)))
 
-$(EXECUTABLE): $(OBJS) | $(R2R_PD)
-	$(link-bin)
+$(EXECUTABLE):: $(OBJS) $(EXECUTABLE_EXTRA_$(PLATFORM_UC)) | $(R2R_PD)
+	$(call link-bin,$@,$(OBJS))
 	@make -f $(PLATFORM_MK) $(PLATFORM)/executable-post
 
 # auto-created dirs
@@ -46,11 +46,11 @@ $(AUTO_DIRS):
 	$(MKDIR_P) $@
 
 $(OBJ_DIR)/%.o: %.c | $(OBJ_DIR)
-	$(compile)
+	$(call compile,$@,$<)
 $(OBJ_DIR)/%.o: %.s | $(OBJ_DIR)
-	$(assemble)
+	$(call assemble,$@,$<)
 $(OBJ_DIR)/%.o: %.asm | $(OBJ_DIR)
-	$(assemble)
+	$(call assemble,$@,$<)
 
 vpath %.c $(SRC_DIRS_EXPANDED)
 vpath %.s $(SRC_DIRS_EXPANDED)

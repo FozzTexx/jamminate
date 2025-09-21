@@ -45,7 +45,8 @@ include makefiles/toplevel-rules.mk
 # 	done
 
 4VOICE_BIN = r2r/coco/4voice.bin
-coco/executable-post::
+EXECUTABLE_EXTRA_COCO := $(4VOICE_BIN)
+coco/executable-post:: $(4VOICE_BIN)
 	./merge-coco-bin.py $(4VOICE_BIN) $(EXECUTABLE) $(EXECUTABLE)
 
 $(4VOICE_BIN):: src/coco/4voice/4voice.s | $(R2R_PD)

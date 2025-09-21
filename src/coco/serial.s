@@ -4,16 +4,15 @@
 _serial_on:
 	ORCC	#$50		; Disable all interrupts
 
-	LDB	>$FF20
-	ANDB	#$FC
-voldown:
-	BEQ	volzero
-	SUBB	#$04
-	STB	>$FF20
-	BRA	voldown
+	LDB	>$FF20		; Save current DAC value
+	STB	last_sound
 
-volzero:
-	LDB	#$02
+	; Turn off all sound to avoid loud popping
+	LDB	>$FF23		; PIA2 CRB / CB2 - master select switch
+	ANDB	#%11110111	; CB2 outputs a high (1)
+	STB	>$FF23
+
+	LDB	#$02		; Set RS232 TX back to mark before turning it on
 	STB	>$FF20
 
 	LDB	>$FF21		; Get PIA2 CRA
@@ -29,12 +28,6 @@ volzero:
 	RTS
 
 _sound_on:
-	; We will still get no sound out unless we activate the
-	; master select switch (required no matter which sound
-	; source we're selecting).
-	LDA	>$FF23		; PIA2 CRB / CB2 - master select switch
-	ORA	#%00001000	; CB2 outputs a high (1)
-	STA	>$FF23
 	LDB	>$FF21		; Get PIA2 CRA
 	ANDB	#%11111011	; bit 2 = 0 -> access data direction register
 	STB	>$FF21
@@ -46,5 +39,18 @@ _sound_on:
 	ORB	#%00000100	; PIA2 CRA: bit 2 = 1 -> access data register
 	STB	>$FF21
 
+	LDB	last_sound	; Restore previous DAC value
+	STB	>$FF20
+
+	; We will still get no sound out unless we activate the
+	; master select switch (required no matter which sound
+	; source we're selecting).
+	LDA	>$FF23		; PIA2 CRB / CB2 - master select switch
+	ORA	#%00001000	; CB2 outputs a high (1)
+	STA	>$FF23
+
 	ANDCC	#$AF		; Turn interrupts back on
 	RTS
+
+last_sound:
+	RMB	1

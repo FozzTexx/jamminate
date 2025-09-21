@@ -181,6 +181,40 @@ int main()
   char *osc_addr, *osc_types, *osc_values;
 
 
+#if 0
+  init_playback();
+  start_note(60);
+  for (rlen = 0; rlen < 100; rlen++)
+    printf("%d ", rlen);
+  printf("\n");
+  for (pos = 0; !pos;) {
+    for (rlen = 0; rlen < 10; rlen++) {
+      if (inkey()) {
+        pos = 1;
+        break;
+      }
+      printf("%d ", rlen);
+    }
+    printf("\n");
+
+    serial_on();
+
+    for (rlen = 0; rlen < 100; rlen++) {
+      if (inkey()) {
+        pos = 1;
+        break;
+      }
+      printf("%d ", rlen);
+    }
+    printf("\n");
+
+    sound_on();
+  }
+  stop_playback();
+  serial_on();
+  exit(0);
+#endif
+
   printf("Searching for FujiNet...\n");
   if (!fuji_get_adapter_config_extended(&ace))
     strcpy(ace.fn_version, "FAIL");

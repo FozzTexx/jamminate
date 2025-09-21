@@ -15,13 +15,13 @@ endif
 SHELL = /bin/bash -o pipefail
 
 define link-bin
-  $(CC) -o $@ $(LDFLAGS) $^ $(LIBS) 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
+  $(CC) -o $1 $(LDFLAGS) $2 $(LIBS) 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
 endef
 
 define compile
-  $(CC) -c $(CFLAGS) --deps=$(OBJ_DIR)/$(basename $(notdir $<)).d -o $@ $< 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
+  $(CC) -c $(CFLAGS) --deps=$(OBJ_DIR)/$(basename $(notdir $2)).d -o $1 $2 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $@ $< 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g ; s/^\(.*\)(\([0-9][0-9]*\)) :/\1:\2:/'
+  $(CC) -c $(AFLAGS) -o $1 $2 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g ; s/^\(.*\)(\([0-9][0-9]*\)) :/\1:\2:/'
 endef

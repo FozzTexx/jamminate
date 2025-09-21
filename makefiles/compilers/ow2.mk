@@ -16,15 +16,15 @@ endif
 define link-bin
   $(LD) $(LDFLAGS) \
     disable 1014 \
-    name $@ \
-    file {$^} \
+    name $1 \
+    file {$2} \
     library {$(LIBS)}
 endef
 
 define compile
-  $(CC) $(CFLAGS) -ad=$(OBJ_DIR)/$(basename $(notdir $<)).d -fo=$@ $<
+  $(CC) $(CFLAGS) -ad=$(OBJ_DIR)/$(basename $(notdir $2)).d -fo=$1 $2
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $@ $< 2>&1
+  $(CC) -c $(AFLAGS) -o $1 $2 2>&1
 endef

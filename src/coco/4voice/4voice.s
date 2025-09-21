@@ -37,19 +37,19 @@
 
 	org	$2800
 
-	;; jmp	_init_playback
-	;; jmp	_stop_playback
-	;; jmp	_get_freq_value
-	;; jmp	_start_voice
+	jmp	_init_playback
+	jmp	_stop_playback
+	jmp	_get_freq_value
+	jmp	_start_voice
 
-	rts
-	fdb 0
-	rts
-	fdb 0
-	rts
-	fdb 0
-	rts
-	fdb 0
+	;; rts
+	;; fdb 0
+	;; rts
+	;; fdb 0
+	;; rts
+	;; fdb 0
+	;; rts
+	;; fdb 0
 
 ; ---------------------------------------------------------------
 ; Waveform page numbers (for use in SetWaveform)
@@ -93,6 +93,8 @@
 ; 5,240 times per second.
 ; ---------------------------------------------------------------
 
+DefWave		EQU	WgOrgan
+
 SoundOut:
 		LDD	#SoundOut	; Set DP so int handler can run faster
 		TFR	A,DP		; RTI will restore original DP (+ all regs)
@@ -116,10 +118,10 @@ FreqValue4	ADDD	#$0000
 		STD	<WaveOff4+1
 		STA	<SumWaveTbl4+2
 		; Sum voices and play result
-SumWaveTbl1	LDA	>_WaveTableSine256		; SMC: Get voice 1 value from wavetable
-SumWaveTbl2	ADDA	>_WaveTableSine256		; SMC: Add voice 2 value from wavetable
-SumWaveTbl3	ADDA	>_WaveTableSine256		; SMC: Add voice 3 value from wavetable
-SumWaveTbl4	ADDA	>_WaveTableSine256		; SMC: Add voice 4 value from wavetable
+SumWaveTbl1	LDA	>DefWave		; SMC: Get voice 1 value from wavetable
+SumWaveTbl2	ADDA	>DefWave		; SMC: Add voice 2 value from wavetable
+SumWaveTbl3	ADDA	>DefWave		; SMC: Add voice 3 value from wavetable
+SumWaveTbl4	ADDA	>DefWave		; SMC: Add voice 4 value from wavetable
 		ORA	$02		; Keep RS232 TX high for when it's enabled again
 		STA	>$FF20		; Send sum of all voices out on DAC
 		LDA	>$FF00		; ack HS irq
@@ -301,16 +303,25 @@ NoteFreqs:
 
 ; Waveform tables, 256-bytes each
 		ALIGN	$100			; Ensure waveform tables begin on page boundary
-_WaveTableSine256:
+WaveTableSine256:
 		INCLUDE WaveTableSine256.inc
+WgSine:
 		INCLUDE WgSine.inc
+WaveTableSquare256:
 		INCLUDE WaveTableSquare256.inc
+WgSquare:
 		INCLUDE WgSquare.inc
+WgTrapez:
 		INCLUDE WgTrapez.inc
+WgOrgan:
 		INCLUDE WgOrgan.inc
+WgSawtooth:
 		INCLUDE WgSawtooth.inc
+WgTriangle:
 		INCLUDE WgTriangle.inc
+WgViolin:
 		INCLUDE WgViolin.inc
+WgImpulse:
 		INCLUDE WgImpulse.inc
 
 		END
