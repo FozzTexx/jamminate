@@ -94,6 +94,8 @@ $(PLATFORM)/r2r-post::
 # include autodeps
 -include $(wildcard $(OBJ_DIR)/*.d)
 
+$(info $(shell PLATFORM=$(PLATFORM) CACHE_DIR=$(CACHE_DIR) \
+      $(MWD)/fnlib.py $(FUJINET_LIB) | tr '\n' '|'))
 ifdef FUJINET_LIB
   # Fill in the FUINET_LIB_* variables by calling fnlib.py. It's a bit
   # messy because of workarounds needed for dealing with newlines and
