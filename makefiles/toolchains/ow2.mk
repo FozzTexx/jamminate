@@ -4,16 +4,8 @@ LD_DEFAULT ?= wlink OPTION quiet
 
 include $(MWD)/tc-common.mk
 CFLAGS += -0 -bt=dos -ms -s -osh -zu
-CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
 AFLAGS +=
 LDFLAGS += SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
-
-ifdef FUJINET_LIB_INCLUDE
-  CFLAGS += -I$(FUJINET_LIB_INCLUDE)
-endif
-ifdef FUJINET_LIB_DIR
-  LIBS += $(FUJINET_LIB_LDLIB)
-endif
 
 define link-bin
   $(LD) $(LDFLAGS) \

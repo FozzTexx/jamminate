@@ -5,16 +5,8 @@ LD_DEFAULT ?= $(CC_DEFAULT)
 include $(MWD)/tc-common.mk
 
 CFLAGS += +coleco -subtype=adam
-CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
-AFLAGS =
+AFLAGS +=
 LDFLAGS += +coleco -subtype=adam
-
-ifdef FUJINET_LIB_INCLUDE
-  CFLAGS += -I$(FUJINET_LIB_INCLUDE)
-endif
-ifdef FUJINET_LIB_DIR
-  LIBS += -L$(FUJINET_LIB_DIR) -l$(FUJINET_LIB_LDLIB)
-endif
 
 define link-bin
   $(LD) $(LDFLAGS) $2 $(LIBS) -o $1
