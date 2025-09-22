@@ -16,9 +16,10 @@ SRC_DIRS = src src/%PLATFORM%
 # - a version number such as 4.7.6
 # - a directory which contains the libs for each platform
 # - a zip file with an archived fujinet-lib
+# - a URL to a git repo
 # - empty which will use whatever is the latest
 # - undefined, no fujinet-lib will be used
-FUJINET_LIB = ../fujinet-lib-unified/build
+FUJINET_LIB = https://github.com/FozzTexx/fujinet-lib-experimental.git
 
 EXTRA_INCLUDE = ../fujinet-lib/coco/src/include
 #EXTRA_INCLUDE = ../fujinet-lib-unified/bus/coco

@@ -5,6 +5,7 @@ import re
 import zipfile
 import urllib.request
 import json
+import subprocess
 
 FUJINET_REPO = "FujiNetWIFI/fujinet-lib"
 GITHUB_API = "https://api.github.com/repos"
@@ -79,6 +80,8 @@ class LibLocator:
       rxm = re.match(VERSION_NAME, FUJINET_LIB)
       if rxm:
         self.MV.FUJINET_LIB_VERSION = rxm.group(1)
+      elif "://" in FUJINET_LIB:
+        self.gitClone(FUJINET_LIB)
       elif os.path.isfile(FUJINET_LIB):
         _, ext = os.path.splitext(FUJINET_LIB)
         if ext == ".zip":
@@ -96,7 +99,7 @@ class LibLocator:
       self.getDirectory()
 
     if not self.MV.FUJINET_LIB_FILE:
-      self.getArchive()
+      self.downloadZip()
 
     if not self.MV.FUJINET_LIB_INCLUDE:
       self.getInclude()
@@ -176,11 +179,13 @@ class LibLocator:
     return
 
   def getDirectory(self):
+    global FUJINET_CACHE_DIR
     self.MV.FUJINET_LIB_DIR = os.path.join(FUJINET_CACHE_DIR,
                                            f"{self.MV.FUJINET_LIB_VERSION}-{self.PLATFORM}")
     return
 
-  def getArchive(self):
+  def downloadZip(self):
+    global FUJINET_CACHE_DIR
     os.makedirs(self.MV.FUJINET_LIB_DIR, exist_ok=True)
 
     self.MV.FUJINET_LIB_FILE = f"fujinet-{self.PLATFORM}-{self.MV.FUJINET_LIB_VERSION}.lib"
@@ -200,6 +205,36 @@ class LibLocator:
 
       with zipfile.ZipFile(self.MV.FUJINET_LIB_ZIP, "r") as zf:
         zf.extractall(self.MV.FUJINET_LIB_DIR)
+
+    return
+
+  def gitClone(self, url):
+    global FUJINET_CACHE_DIR
+    os.makedirs(FUJINET_CACHE_DIR, exist_ok=True)
+    branch = ""
+    if "#" in url:
+      url, branch = url.split("#")
+    base = url.rstrip("/").split("/")[-1]
+    if base.endswith(".git"):
+      base = base.rsplit(".", 1)[0]
+    repoDir = os.path.join(FUJINET_CACHE_DIR, base)
+    # FIXME - yah, this is harcoded to where we expect the output
+    self.MV.FUJINET_LIB_DIR = os.path.join(repoDir, "build")
+
+    if not os.path.exists(repoDir):
+      cmd = ["git", "clone", url]
+      if branch:
+        cmd.extend(["-b", branch])
+      subprocess.run(cmd, cwd=FUJINET_CACHE_DIR, check=True)
+
+    if self.PLATFORM == "coco":
+      self.MV.FUJINET_LIB_FILE = fr"libfujinet.{self.PLATFORM}.a"
+    else:
+      self.MV.FUJINET_LIB_FILE = f"fujinet.{self.PLATFORM}.lib"
+    libPath = os.path.join(self.MV.FUJINET_LIB_DIR, self.MV.FUJINET_LIB_FILE)
+    if not os.path.exists(libPath):
+      cmd = ["make", ]
+      subprocess.run(cmd, cwd=repoDir, check=True)
 
     return
 
@@ -224,6 +259,8 @@ def error_exit(*args):
   exit(1)
 
 def main():
+  global CACHE_DIR, FUJINET_CACHE_DIR
+
   args = build_argparser().parse_args()
 
   PLATFORM = os.getenv("PLATFORM")
@@ -240,6 +277,7 @@ def main():
   env_cache_dir = os.getenv("CACHE_DIR")
   if env_cache_dir:
     CACHE_DIR = env_cache_dir
+    FUJINET_CACHE_DIR = os.path.join(CACHE_DIR, os.path.basename(FUJINET_CACHE_DIR))
 
   fujinetLib = LibLocator(FUJINET_LIB, PLATFORM)
   fujinetLib.printMakeVariables()
