@@ -15,11 +15,11 @@ jobs:
       matrix:
         platform:
           # - adam
-          - apple2
-          - atari
-          - c64
-          # - coco
-          - msdos
+          # - apple2
+          # - atari
+          # - c64
+          - coco
+          # - msdos
 
     container:
       image: fozztexx/defoogi:1.4.2

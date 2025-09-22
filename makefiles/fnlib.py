@@ -57,6 +57,7 @@ class LibLocator:
       - a version number such as 4.7.4
       - a directory which contains the libs for each platform
       - a zip file with an archived fujinet-lib
+      - a URL to a git repo
       - empty
     """
 
