@@ -4,7 +4,6 @@
 
 #include <fujinet-fuji.h>
 #include <fujinet-network.h>
-#include <fujinet-network-coco.h>
 
 #define PORT "6573"
 #define SOCKET "N:TCP://:" PORT
@@ -48,32 +47,6 @@ void hexdump(uint8_t *buffer, uint16_t count)
   }
 
   return;
-}
-
-uint8_t network_accept(const char* devicespec)
-{
-  extern void bus_ready();
-  extern void dwwrite(uint8_t *, uint16_t);
-
-
-  struct _ioctl
-  {
-    uint8_t opcode;
-    uint8_t unit;
-    uint8_t cmd;
-    uint8_t aux1;
-    uint8_t aux2;
-  } ioctl;
-
-  ioctl.opcode = OP_NET;
-  ioctl.unit = network_unit(devicespec);
-  ioctl.cmd = 'A';
-  ioctl.aux1 = ioctl.aux2 = 0;
-
-  bus_ready();
-  dwwrite((uint8_t *)&ioctl, sizeof(ioctl));
-
-  return network_get_error(ioctl.unit);
 }
 
 uint16_t parse_osc_message(uint8_t *msg, uint16_t msglen,

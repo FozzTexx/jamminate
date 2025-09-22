@@ -21,9 +21,6 @@ SRC_DIRS = src src/%PLATFORM%
 # - undefined, no fujinet-lib will be used
 FUJINET_LIB = https://github.com/FozzTexx/fujinet-lib-experimental.git
 
-EXTRA_INCLUDE = ../fujinet-lib/coco/src/include
-#EXTRA_INCLUDE = ../fujinet-lib-unified/bus/coco
-
 # Define extra dirs ("combos") that expand with a platform.
 # Format: platform+=combo1,combo2
 PLATFORM_COMBOS = \
