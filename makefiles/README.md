@@ -55,6 +55,24 @@ make coco
 make apple2/disk
 ```
 
+### FUJINET_LIB
+
+This variable specifies which FujiNet library to use when building your project. It supports several formats:
+
+* **Version number** — e.g., `4.7.6`
+* **Directory** — a path containing the libraries for each platform
+* **Zip archive** — a local or downloaded zip file containing the library
+* **Git repository URL** — a remote repo to clone
+* **Empty** — automatically uses the latest available library
+* **Undefined** — disables use of a FujiNet library entirely
+
+#### Example
+
+```
+# Use FujiNet library version 4.7.6
+FUJINET_LIB = 4.7.6
+```
+
 ### The `r2r` Target
 
 The `r2r` target is the **default build output** for a platform. It
