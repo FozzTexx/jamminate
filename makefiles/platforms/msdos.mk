@@ -2,7 +2,7 @@ EXECUTABLE = $(R2R_PD)/$(PRODUCT).exe
 
 MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk
-include $(MWD)/compilers/ow2.mk
+include $(MWD)/toolchains/ow2.mk
 
 CFLAGS += -D__MSDOS__
 

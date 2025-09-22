@@ -1,9 +1,11 @@
-CC = wcc
-AS = wasm
+CC_DEFAULT ?= wcc
+AS_DEFAULT ?= wasm
+LD_DEFAULT ?= wlink OPTION quiet
+
+include $(MWD)/tc-common.mk
 CFLAGS += -0 -bt=dos -ms -s -osh -zu
 CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
 AFLAGS +=
-LD = wlink OPTION quiet
 LDFLAGS += SYSTEM dos OPTION MAP LIBPATH $(FUJINET_LIB_DIR)
 
 ifdef FUJINET_LIB_INCLUDE
@@ -26,5 +28,5 @@ define compile
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $1 $2 2>&1
+  $(AS) -c $(AFLAGS) -o $1 $2 2>&1
 endef

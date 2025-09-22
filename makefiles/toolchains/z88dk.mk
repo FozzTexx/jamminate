@@ -1,5 +1,9 @@
-CC = zcc
-AS = z80asm
+CC_DEFAULT ?= zcc
+AS_DEFAULT ?= z80asm
+LD_DEFAULT ?= $(CC_DEFAULT)
+
+include $(MWD)/tc-common.mk
+
 CFLAGS += +coleco -subtype=adam
 CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
 AFLAGS =
@@ -13,7 +17,7 @@ ifdef FUJINET_LIB_DIR
 endif
 
 define link-bin
-  $(CC) $(LDFLAGS) $2 $(LIBS) -o $1
+  $(LD) $(LDFLAGS) $2 $(LIBS) -o $1
 endef
 
 define compile
@@ -21,5 +25,5 @@ define compile
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $1 $2
+  $(AS) -c $(AFLAGS) -o $1 $2
 endef

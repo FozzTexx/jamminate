@@ -1,8 +1,13 @@
-CC = cl65
-AS = ca65
+CC_DEFAULT ?= cl65
+AS_DEFAULT ?= ca65
+LD_DEFAULT ?= $(CC_DEFAULT)
+
+include $(MWD)/tc-common.mk
+
 CFLAGS += -O --cpu 6502
 CFLAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I $(incdir))
-AFLAGS = --cpu 6502
+AFLAGS += --cpu 6502
+LDFLAGS +=
 
 ifdef FUJINET_LIB_INCLUDE
   CFLAGS += -I $(FUJINET_LIB_INCLUDE)
@@ -12,7 +17,7 @@ ifdef FUJINET_LIB_DIR
 endif
 
 define link-bin
-  $(CC) -vm -t $(PLATFORM) $(LDFLAGS) $2 $(LIBS) -o $1
+  $(LD) -vm -t $(PLATFORM) $(LDFLAGS) $2 $(LIBS) -o $1
 endef
 
 define compile
@@ -20,5 +25,5 @@ define compile
 endef
 
 define assemble
-  $(CC) -l $(basename $1).lst -c $(AFLAGS) -t $(PLATFORM) -o $1 $2
+  $(AS) -l $(basename $1).lst -c $(AFLAGS) -t $(PLATFORM) -o $1 $2
 endef

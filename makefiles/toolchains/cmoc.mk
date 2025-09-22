@@ -1,8 +1,13 @@
-CC = cmoc
-AS = lwasm
-CFLAGS = $(CFLAGS_CMOC) --intdir=$(OBJ_DIR) $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
-AFLAGS = $(AFLAGS_CMOC)
-LDFLAGS = $(LDFLAGS_CMOC)
+CC_DEFAULT ?= cmoc
+AS_DEFAULT ?= $(CC_DEFAULT)
+LD_DEFAULT ?= $(CC_DEFAULT)
+
+include $(MWD)/tc-common.mk
+
+CFLAGS += --intdir=$(OBJ_DIR)
+CLFAGS += $(foreach incdir,$(EXTRA_INCLUDE),-I$(incdir))
+AFLAGS +=
+LDFLAGS +=
 
 ifdef FUJINET_LIB_INCLUDE
   CFLAGS += -I$(FUJINET_LIB_INCLUDE)
@@ -15,7 +20,7 @@ endif
 SHELL = /bin/bash -o pipefail
 
 define link-bin
-  $(CC) -o $1 $(LDFLAGS) $2 $(LIBS) 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
+  $(LD) -o $1 $(LDFLAGS) $2 $(LIBS) 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g'
 endef
 
 define compile
@@ -23,5 +28,5 @@ define compile
 endef
 
 define assemble
-  $(CC) -c $(AFLAGS) -o $1 $2 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g ; s/^\(.*\)(\([0-9][0-9]*\)) :/\1:\2:/'
+  $(AS) -c $(AFLAGS) -o $1 $2 2>&1 | sed -e 's/'$$'\033''[[][0-9][0-9]*m//g ; s/^\(.*\)(\([0-9][0-9]*\)) :/\1:\2:/'
 endef

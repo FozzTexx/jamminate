@@ -10,6 +10,19 @@ $(info Building for PLATFORM=$(PLATFORM))
 
 include $(MWD)/../Makefile
 
+# Only set DEFAULT if the specific tool is non-empty
+ifneq ($(strip $(CC_$(TOOLCHAIN_UC))),)
+CC_DEFAULT = $(CC_$(TOOLCHAIN_UC))
+endif
+
+ifneq ($(strip $(AS_$(TOOLCHAIN_UC))),)
+AS_DEFAULT = $(AS_$(TOOLCHAIN_UC))
+endif
+
+ifneq ($(strip $(LD_$(TOOLCHAIN_UC))),)
+LD_DEFAULT = $(LD_$(TOOLCHAIN_UC))
+endif
+
 R2R_PD := $(R2R_DIR)/$(PLATFORM)
 OBJ_DIR := $(BUILD_DIR)/$(PLATFORM)
 CACHE_PLATFORM := $(CACHE_DIR)/$(PLATFORM)

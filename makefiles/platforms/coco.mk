@@ -3,7 +3,7 @@ DISK = $(R2R_PD)/$(PRODUCT).dsk
 
 MWD := $(realpath $(dir $(lastword $(MAKEFILE_LIST)))..)
 include $(MWD)/common.mk
-include $(MWD)/compilers/cmoc.mk
+include $(MWD)/toolchains/cmoc.mk
 
 r2r:: $(DISK) $(R2R_POSTDEPS)
 	@make -f $(PLATFORM_MK) $(PLATFORM)/r2r-post
