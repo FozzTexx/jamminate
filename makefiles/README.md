@@ -55,13 +55,13 @@ make coco
 make apple2/disk
 ```
 
-### FUJINET_LIB
+### FujiNet library (`FUJINET_LIB`)
 
 This variable specifies which FujiNet library to use when building your project. It supports several formats:
 
 * **Version number** — e.g., `4.7.6`
 * **Directory** — a path containing the libraries for each platform
-* **Zip archive** — a local or downloaded zip file containing the library
+* **Zip archive** — a locally built or downloaded zip file containing the library
 * **Git repository URL** — a remote repo to clone
 * **Empty** — automatically uses the latest available library
 * **Undefined** — disables use of a FujiNet library entirely
@@ -72,38 +72,6 @@ This variable specifies which FujiNet library to use when building your project.
 # Use FujiNet library version 4.7.6
 FUJINET_LIB = 4.7.6
 ```
-
-### The `r2r` Target
-
-The `r2r` target is the **default build output** for a platform. It
-will always build the platform’s executable. For some platforms, it
-also creates a bootable disk image.
-
-For example:
-
-- On **CoCo**, `r2r` builds a `.bin` file and a `.dsk` disk image.
-- On **Apple II**, `r2r` builds an AppleSingle file and a `.po` disk image.
-- Other platforms behave similarly depending on their toolchains.
-
-#### Output Location
-
-All build artifacts go under the `r2r/<platform>/` directory:
-
-- Executables: `r2r/<platform>/<product>.<ext>`
-- Optional disk images: `r2r/<platform>/<product>.dsk`
-
-### Customizing Per Platform or Compiler
-
-There are two kinds of per-platform/per-compiler variables:
-
-1. Extra include directories – add paths for the compiler and assembler to search:
-  * Use `EXTRA_INCLUDE` to specify one or more directories. They are
-    automatically added to `-I` flags during compilation and assembly.
-2. Extras flags – add flags or options without removing the defaults:
-  * Example: `LDFLAGS_EXTRA_COCO` adds extra linker flags when building for CoCo.
-3. Overrides – completely replace the default for a platform:
-  * Example: `CC_APPLE2` sets the compiler to use for Apple II,
-    replacing the default `cc65` setup.
 
 ### Source directories (`SRC_DIRS`)
 
@@ -148,6 +116,38 @@ With `SRC_DIRS = src src/%PLATFORM%`, building for `c64` would expand `%PLATFORM
 - `src/c64`
 - `src/commodore`
 - `src/eightbit`
+
+### The `r2r` Target
+
+The `r2r` target is the **default build output** for a platform. It
+will always build the platform’s executable. For some platforms, it
+also creates a bootable disk image.
+
+For example:
+
+- On **CoCo**, `r2r` builds a `.bin` file and a `.dsk` disk image.
+- On **Apple II**, `r2r` builds an AppleSingle file and a `.po` disk image.
+- Other platforms behave similarly depending on their toolchains.
+
+#### Output Location
+
+All build artifacts go under the `r2r/<platform>/` directory:
+
+- Executables: `r2r/<platform>/<product>.<ext>`
+- Optional disk images: `r2r/<platform>/<product>.dsk`
+
+### Customizing Per Platform or Compiler
+
+There are two kinds of per-platform/per-compiler variables:
+
+1. Extra include directories – add paths for the compiler and assembler to search:
+  * Use `EXTRA_INCLUDE` to specify one or more directories. They are
+    automatically added to `-I` flags during compilation and assembly.
+2. Extras flags – add flags or options without removing the defaults:
+  * Example: `LDFLAGS_EXTRA_COCO` adds extra linker flags when building for CoCo.
+3. Overrides – completely replace the default for a platform:
+  * Example: `CC_APPLE2` sets the compiler to use for Apple II,
+    replacing the default `cc65` setup.
 
 ### Platform-specific r2r or disk steps
 
