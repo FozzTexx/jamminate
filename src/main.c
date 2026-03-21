@@ -120,6 +120,7 @@ uint16_t parse_osc_message(uint8_t *msg, uint16_t msglen,
   return offset + pos;
 }
 
+#ifdef OBSOLETE
 void setup_cd_flag()
 {
   uint8_t val, prev;
@@ -143,6 +144,7 @@ void setup_cd_flag()
 
   return;
 }
+#endif /* OBSOLETE */
 
 int main()
 {
@@ -152,6 +154,7 @@ int main()
   size_t length;
   char *ptr;
   char *osc_addr, *osc_types, *osc_values;
+  bool have_proceed = network_has_proceed();
 
 
 #if 0
@@ -187,6 +190,8 @@ int main()
   serial_on();
   exit(0);
 #endif
+
+  printf("Have proceed: %d\n", have_proceed);
 
   printf("Searching for FujiNet...\n");
   if (!fuji_get_adapter_config_extended(&ace))
@@ -228,30 +233,51 @@ int main()
   printf("Connected\n");
 
   init_playback();
+#ifdef OBSOLETE
   setup_cd_flag();
+#endif /* OBSOLETE */
 
   (void) *PIA2_REG0; // Clear the CD flag
   printf("Waiting for data...\n");
   for (;;) {
+    avail = 0;
+    err = NETWORK_SUCCESS;
+
     for (;;) {
       if (inkey()) {
-        avail = 0;
         err = -1;
         break;
       }
 
       // Check if data is available
+#ifdef OBSOLETE
       if ((*PIA2_REG1) & 0x80) {
         while ((*PIA2_REG1) & 0x80)
           (void) *PIA2_REG0; // Clear the CD flag
         avail = sizeof(buffer);
         break;
       }
+#else
+      switch (have_proceed) {
+      case true:
+        if (network_proceed())
+          avail = sizeof(buffer);
+        break;
+      default:
+        serial_on();
+        network_status(SOCKET, &avail, &status, &err);
+        sound_on();
+        break;
+      }
+
+      if (avail)
+        break;
+#endif /* OBSOLETE */
     }
 
     //printf("STATUS: A=%u S=%u E=%u\n", avail, status, err);
 
-    if (err) {
+    if (err != NETWORK_SUCCESS) {
       printf("CONNECTION ERROR: A=%u S=%u E=%u\n", avail, status, err);
       break;
     }
