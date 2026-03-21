@@ -1,26 +1,32 @@
-# Makefile Framework
+# MekkoGX Modular Makefile Framework
 
-This directory provides a modular framework of Makefiles.
+[MekkoGX](https://github.com/fozzTexx/MekkoGX) is a cross-platform
+build template for retro and classic computers. It provides a
+collection of modular Makefiles and a top-level template project to
+simplify compiling, linking, and building disk images across multiple
+platforms.
 
 The main goal is to make it easy to:
 
-* Add new computer platforms by dropping in a new
-  platforms/<platform>.mk file.
-* Avoid per-project hacks inside platform makefiles.
-* Keep all project-specific customization in the top-level Makefile,
-  where it’s visible and easy to maintain.
+* Easily switch between different FUJINET_LIB versions by setting a
+  single variable (supports directories, releases, or Git URLs).
+* Keep platforms and toolchains fully modular: each uses a small .mk
+  file with shared logic in common.mk and tc-common.mk, making it
+  simple to add new platforms or toolchains.
+* **Keep all project-specific customization in the top-level Makefile,
+  where it’s visible and easy to maintain.**
 
 Think of this as a library of Makefiles.
 
 * `platforms/*.mk` files provide reusable rules — how to build
   executables, how to create disk images, and other platform-specific
   steps.
-* `compilers/*.mk` files define compiler-specific flags and helper
+* `toolchains/*.mk` files define compiler-specific flags and helper
   functions.
 * The project’s top-level Makefile ties everything together, declaring
   what to build while reusing the shared rules.
 
-The result is a modular system: platforms and compilers know *how* to
+The result is a modular system: platforms and toolchains know *how* to
 build, and the top-level Makefile defines *what* to build.
 
 ## 1. The Top-Level Makefile
@@ -75,9 +81,12 @@ FUJINET_LIB = 4.7.6
 
 ### Source directories (`SRC_DIRS`)
 
-`SRC_DIRS` lists the directories `make` should search for source
-files. You can use the literal `%PLATFORM%` token to have directories
-expand automatically based on the platform being built.
+`SRC_DIRS` lists the directories that `make` should search for source files.
+It supports two special features:
+
+#### 1. **Platform-aware directory expansion**
+
+Use the literal `%PLATFORM%` token to have directories expand based on the active platform.
 
 Example:
 
@@ -85,9 +94,40 @@ Example:
 SRC_DIRS = src src/%PLATFORM%
 ```
 
-> Note: `%PLATFORM%` is used instead of `$(PLATFORM)` to avoid
-  accidental expansion in unrelated directory names. See Platform
-  Combos below.
+> **Note:** `%PLATFORM%` is used instead of `$(PLATFORM)` to avoid accidental
+> expansion inside unrelated directory names.
+
+#### 2. **Recursive directory search with `/**`**
+
+Appending `/**` to any entry makes `make` recursively search *all* subdirectories.
+
+Example:
+
+```
+# Recursively search inside src/apple2/
+SRC_DIRS = src src/apple2/**
+```
+
+You can also combine both features:
+
+```
+# All dirs named "exact" under the platform prefix, recursively
+SRC_DIRS = src/%PLATFORM%/**/exact
+```
+
+---
+
+### Include directories (`INCLUDE_DIRS`)
+
+`INCLUDE_DIRS` works exactly like `SRC_DIRS`.
+It supports `%PLATFORM%` and `/**`, and all expanded paths are added to both
+`CFLAGS` and `ASFLAGS` include search paths.
+
+Example:
+
+```
+INCLUDE_DIRS = include include/%PLATFORM% include/common/**
+```
 
 ### Platform Combos (`PLATFORM_COMBOS`)
 
@@ -117,7 +157,7 @@ With `SRC_DIRS = src src/%PLATFORM%`, building for `c64` would expand `%PLATFORM
 - `src/commodore`
 - `src/eightbit`
 
-### The `r2r` Target
+### The `r2r` "Ready 2 Run" Target
 
 The `r2r` target is the **default build output** for a platform. It
 will always build the platform’s executable. For some platforms, it
@@ -141,8 +181,9 @@ All build artifacts go under the `r2r/<platform>/` directory:
 There are two kinds of per-platform/per-compiler variables:
 
 1. Extra include directories – add paths for the compiler and assembler to search:
-  * Use `EXTRA_INCLUDE` to specify one or more directories. They are
-    automatically added to `-I` flags during compilation and assembly.
+  * Use `EXTRA_INCLUDE` or `EXTRA_INCLUDE_<platform>`to specify one or
+    more directories. They are automatically added to `-I` flags
+    during compilation and assembly.
 2. Extras flags – add flags or options without removing the defaults:
   * Example: `LDFLAGS_EXTRA_COCO` adds extra linker flags when building for CoCo.
 3. Overrides – completely replace the default for a platform:
@@ -195,8 +236,8 @@ post-build targets. These allow you to:
 
 #### Key points
 
-* The extra dependencies variables (e.g., `EXECUTABLE_POSTDEPS_COCO`,
-  `DISK_POSTDEPS_COCO`, `R2R_POSTDEPS_COCO`) **do not automatically
+* The extra dependencies variables (e.g., `EXECUTABLE_EXTRA_DEPS_COCO`,
+  `DISK_EXTRA_DEPS_COCO`, `R2R_EXTRA_DEPS_COCO`) **do not automatically
   add files to the output**. They only make sure that your custom
   files are rebuilt when modified.
 * You are responsible for handling these extra dependencies
@@ -206,7 +247,7 @@ post-build targets. These allow you to:
 #### Example: Adding files to a COCO disk
 
 ```
-DISK_POSTDEPS_COCO := r2r/coco/4voice.bin basic/coco/song.bas
+DISK_EXTRA_DEPS_COCO := r2r/coco/4voice.bin basic/coco/song.bas
 
 coco/disk-post::
         decb copy -b -2 r2r/coco/4voice.bin "$(DISK),4VOICE.BIN"
@@ -234,7 +275,7 @@ There are three “mid-level” Makefiles that provide shared rules:
 - **`toplevel-rules.mk`**
   Provides project-wide rules for building, cleaning, and delegating
   into the platform Makefiles. This file is what ties the
-  `platforms/*.mk` and `compilers/*.mk` files into your project.
+  `platforms/*.mk` and `toolchains/*.mk` files into your project.
 
 - **`tc-common.mk`**
   Provides common things for the `toolchains/*.mk` files.
