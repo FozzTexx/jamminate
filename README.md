@@ -22,6 +22,7 @@ Jamminate shows the magic of networked music on vintage hardware:
 - **Performs melodies, chords, and harmonies** on retro computers.
 - Notes continue until released, allowing expressive play.
 - **Polyphony support where hardware allows**, letting multiple notes sound simultaneously.
+- **Shows what it is playing** on an on-screen piano keyboard.
 
 Whether you want to experiment with your CoCo, Apple II, or other
 retro systems, Jamminate makes it easy to turn your vintage computer
@@ -34,6 +35,9 @@ into a live instrument.
 - **OSC/TCP input**: Send musical commands from any OSC-capable networked device.
 - **Expressive control**: Notes start on key down and stop on key up for real-time performance.
 - **Polyphony (hardware-dependent)**: Play overlapping notes or simple chords.
+- **On-screen keyboard**: A four-octave keybed lights each note as it sounds,
+  along with its letter and octave.
+- **Reconnects**: Disconnect a controller and connect again without restarting.
 - **Retro-friendly**: Designed to run on 8-bit computers with FujiNet,
   but adaptable to other platforms.
 
@@ -55,7 +59,8 @@ own.
 
 1. A **networked device sends note on/off events** over OSC.
 2. **FujiNet handles the TCP connection** and forwards the commands to the retro computer.
-3. The retro computer **performs the notes** in real time.
+3. The retro computer **performs the notes** in real time and lights them on
+   its on-screen keyboard.
 4. Notes continue until the corresponding **note off events** arrive.
 
 This allows the vintage computer to function as a **real-time,

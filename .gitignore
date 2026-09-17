@@ -13,3 +13,7 @@ r2r/
 *.com
 
 *~
+
+__pycache__/
+*.pyc
+.claude/
