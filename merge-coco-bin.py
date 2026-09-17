@@ -54,14 +54,18 @@ def main():
   sections1 = split_sections(bin1)
   sections2 = split_sections(bin2)
 
+  # Sections are concatenated at the addresses they were linked for. Shifting
+  # them here would break every absolute address inside the code -- cmoc emits
+  # PC-relative code and survives it, but hand-written assembly does not. Build
+  # bin2 with the right origin (see LDFLAGS_EXTRA_COCO in the Makefile) instead.
   merged = sections1[:-1]
   end_addr = max(x.address + len(x.data) for x in sections1)
-  start = ((end_addr + 255) // 256) * 256
-  first = sections2[0].address
-  for section in sections2:
-    htype = section.htype
-    address = section.address
-    merged.append(CoCoSection(htype, address - first + start, section.data))
+  first = min(x.address for x in sections2 if x.htype != 0xFF)
+  if first < end_addr:
+    raise SystemExit(f"{args.bin2} loads at ${first:04x}, overlapping "
+                     f"{args.bin1} which ends at ${end_addr:04x}. "
+                     f"Link it at ${end_addr:04x} or above.")
+  merged.extend(sections2)
 
   with open(args.output, mode="wb") as f:
     for section in merged:

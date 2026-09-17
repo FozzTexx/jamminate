@@ -21,6 +21,19 @@ SRC_DIRS = src src/%PLATFORM%
 # - undefined, no fujinet-lib will be used
 FUJINET_LIB = https://github.com/FozzTexx/fujinet-lib-experimental.git
 
+# fujinet-bus.h keys FUJI_VARIABLE_LEN_PACKETS off BUILD_COCO, and without it
+# the header defaults to the variable-length path and pulls in <string.h>,
+# which cmoc does not provide.
+CFLAGS_EXTRA_COCO += -DBUILD_COCO
+
+# 4voice.bin occupies $2800-$35FF, so the C program has to start at $3600.
+# Link it there rather than relocating it afterwards: moving a binary by
+# rewriting its DECB load addresses leaves every absolute address inside the
+# code pointing at where it used to be. cmoc emits PC-relative code and survives
+# that, but hand-written assembly in fujinet-lib does not -- it uses absolute
+# immediates (ldx #_fuji_field_numbytes_table, lda >_fb_header).
+LDFLAGS_EXTRA_COCO += --org=3600
+
 # Define extra dirs ("combos") that expand with a platform.
 # Format: platform+=combo1,combo2
 PLATFORM_COMBOS = \
